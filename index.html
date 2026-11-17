@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1512">
+<title>CryptoSim – Apprends la crypto sans risque (simulateur gratuit)</title>
+<meta name="description" content="Comprends le Bitcoin et les cryptomonnaies en t'entraînant avec 10 000 € fictifs et les vrais prix. 18 leçons, quiz, missions, lexique. Gratuit, sans inscription, zéro risque.">
+<meta property="og:title" content="CryptoSim – Simulateur de crypto gratuit">
+<meta property="og:description" content="10 000 € fictifs, prix en direct. Apprends la crypto sans risquer un centime.">
+<meta property="og:type" content="website">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1512; --panel:#151d19; --panel2:#1b2520; --line:#26312b;
+  --ink:#efe9da; --mut:#89958c; --acc:#ffd23f; --up:#4fd68a; --down:#ff6a55;
+  --sans:"Archivo","Segoe UI",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px}
+body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+button,input{font-family:inherit}
+.m{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.lab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.up{color:var(--up)}.down{color:var(--down)}
+
+header{padding:12px 14px 10px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
+.logo{font-weight:900;font-size:21px;letter-spacing:-.03em;text-transform:uppercase;line-height:1}
+.logo i{font-style:normal;color:var(--acc)}
+#live{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--mut);text-transform:uppercase}
+#live b{width:7px;height:7px;border-radius:50%;background:var(--mut)}
+#live.on{color:var(--up)}#live.on b{background:var(--up);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+#total{margin-left:auto;text-align:right;line-height:1.15}
+#total .m{font-size:17px;font-weight:600}
+
+.tape{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;background:var(--panel)}
+.tapeIn{display:inline-block;padding:6px 0;animation:tape 60s linear infinite;font-family:var(--mono);font-size:12px}
+.tapeIn span{margin:0 14px}.tapeIn em{font-style:normal;color:var(--mut);margin-right:6px}
+@keyframes tape{to{transform:translateX(-50%)}}
+
+main{flex:1;overflow-y:auto;padding:12px 12px 20px}
+.page{display:none}.page.on{display:block}
+nav{display:flex;border-top:1px solid var(--line);background:var(--panel);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;min-width:0;background:none;border:0;border-top:2px solid transparent;color:var(--mut);padding:9px 0 8px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+nav svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--acc);border-top-color:var(--acc)}
+
+.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:13px;margin-bottom:12px}
+.box.flat{padding:0}
+h2{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin:18px 2px 8px}
+.note{font-size:12px;color:var(--mut);margin:8px 2px;line-height:1.45}
+.tag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;border:1px solid var(--acc);color:var(--acc);padding:2px 6px;border-radius:3px;text-transform:uppercase}
+
+.pulse{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.pulse b{display:block;font-size:15px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{height:5px;background:var(--down);border-radius:3px;overflow:hidden;margin-top:9px}.bar i{display:block;height:100%;background:var(--up)}
+
+.tools{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+#q{flex:1 1 130px;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:9px 11px;font-size:15px;outline:none}
+#q:focus,input[type=number]:focus{border-color:var(--acc)}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{background:var(--panel);border:0;border-right:1px solid var(--line);color:var(--mut);padding:0 10px;font-size:12px;font-weight:700;cursor:pointer;min-height:38px}
+.seg button:last-child{border-right:0}.seg button.on{background:var(--acc);color:#111}
+
+.row{display:flex;align-items:center;gap:10px;padding:10px 11px;border-bottom:1px solid var(--line);cursor:pointer}
+.row:last-child{border-bottom:0}.row:hover{background:var(--panel2)}
+.rk{width:18px;text-align:right;color:var(--mut);font-family:var(--mono);font-size:11px;flex:none}
+.ico{width:28px;height:28px;border-radius:50%;background:var(--panel2);flex:none;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;color:var(--mut);overflow:hidden}
+.ico img{width:100%;height:100%}
+.nm{flex:1;min-width:0}
+.nm div{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm small{color:var(--mut);font-family:var(--mono);font-size:11px;text-transform:uppercase}
+.spark{width:56px;height:24px;flex:none}
+.px{text-align:right;flex:none;min-width:96px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.px div{font-weight:600;font-size:14.5px;border-radius:3px}
+.px small{font-size:12px}
+.fu{animation:fu .7s}.fd{animation:fd .7s}
+@keyframes fu{0%{background:rgba(79,214,138,.4)}100%{background:transparent}}
+@keyframes fd{0%{background:rgba(255,106,85,.4)}100%{background:transparent}}
+
+.big{font-family:var(--mono);font-size:29px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.kv b{display:block;font-family:var(--mono);font-size:15px;font-weight:600;margin-top:2px}
+.btn{border:1px solid transparent;border-radius:6px;padding:13px 10px;font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;width:100%}
+.buy{background:var(--up);color:#07130c}.sell{background:transparent;border-color:var(--down);color:var(--down)}
+.ghost{background:transparent;border-color:var(--line);color:var(--ink)}.gold{background:var(--acc);color:#111}
+.btn:disabled{opacity:.35;cursor:default}
+input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:12px;
+  font-family:var(--mono);font-size:17px;outline:none}
+.chips{display:flex;gap:6px;margin:8px 0}
+.chips button{flex:1;background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:7px 0;font-family:var(--mono);font-size:12px;cursor:pointer}
+
+.tip{border-left:3px solid var(--acc);padding:2px 0 2px 10px;margin:10px 0;font-size:14.5px;line-height:1.45}
+.tip.bad{border-color:var(--down)}.tip.good{border-color:var(--up)}
+
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:flex-end;justify-content:center;z-index:10}
+#sheet.on{display:flex}
+#sheetIn{background:var(--panel);width:100%;max-width:600px;max-height:94%;overflow-y:auto;border:1px solid var(--line);border-bottom:0;
+  border-radius:10px 10px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
+#sheetIn .top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+#sheetIn .top h3{flex:1;margin:0;font-size:18px;font-weight:900}
+.x{background:transparent;border:1px solid var(--line);color:var(--ink);width:32px;height:32px;border-radius:6px;font-size:15px;cursor:pointer}
+canvas{width:100%;height:150px;display:block;margin:10px 0 6px}
+#toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#111;padding:10px 14px;border-radius:6px;
+  font-weight:700;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:20;max-width:90%;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%)}
+
+.less h3{margin:0 0 6px;font-size:16px;font-weight:900}
+.less p{margin:0 0 10px;color:#cfc9bb;line-height:1.5;font-size:14.5px}
+.less .q{font-weight:700;margin:10px 0 6px;font-size:14.5px}
+.ans{display:block;width:100%;text-align:left;background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:6px;
+  padding:10px 12px;margin-bottom:6px;font-size:14.5px;cursor:pointer}
+.ans:hover:not(:disabled){border-color:var(--mut)}
+.ans.ok{border-color:var(--up);color:var(--up)}.ans.ko{border-color:var(--down);color:var(--down)}
+.done{color:var(--up);font-family:var(--mono);font-size:11px;letter-spacing:.08em;float:right}
+.empty{text-align:center;color:var(--mut);padding:24px 10px;line-height:1.5}
+.del{background:none;border:0;color:var(--mut);font-size:15px;cursor:pointer;padding:6px 8px}
+.hist{font-size:13.5px;display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.hist:last-child{border:0}.hist small{color:var(--mut);font-family:var(--mono);font-size:11px}
+.fld{display:block;width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:12px;font-size:16px;outline:none;margin-bottom:8px}
+.fld:focus{border-color:var(--acc)}
+.chk{display:flex;gap:9px;align-items:flex-start;font-size:14px;line-height:1.4;margin:6px 0 10px;cursor:pointer}
+.chk input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--acc);flex:none}
+.lnk{background:none;border:0;color:var(--acc);font-size:14px;padding:8px 0;cursor:pointer;text-decoration:underline}
+a{color:var(--acc)}
+#acMsg{font-size:14px;line-height:1.45;margin-top:8px}#acMsg.bad{color:var(--down)}#acMsg.good{color:var(--up)}
+.perk{display:flex;gap:10px;padding:7px 0;font-size:14.5px;line-height:1.4}.perk b{color:var(--acc);font-family:var(--mono);flex:none}
+.price{font-family:var(--mono);font-size:26px;font-weight:600}.price small{font-size:13px;color:var(--mut)}
+#proTag{display:none;margin-left:6px;vertical-align:middle}
+.learn p{margin:8px 0 0;font-size:14px;line-height:1.5;color:#cfc9bb}
+.mis{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.mis:last-child{border:0}
+.mis .st{width:20px;height:20px;border:1.5px solid var(--mut);border-radius:4px;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#111}
+.mis.ok .st{background:var(--up);border-color:var(--up)}
+.mis b{display:block;font-size:14.5px}.mis span{font-size:13.5px;color:var(--mut);line-height:1.4}
+details.lx{border-bottom:1px solid var(--line);padding:9px 0}details.lx:last-child{border:0}
+details.lx summary{cursor:pointer;font-weight:700;font-size:14.5px;list-style:none}
+details.lx summary::before{content:'+ ';color:var(--acc);font-family:var(--mono)}
+details.lx[open] summary::before{content:'– '}
+details.lx p{margin:6px 0 0;font-size:14px;line-height:1.5;color:#cfc9bb}
+.prog{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:8px}.prog i{display:block;height:100%;background:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">Crypto<i>/</i>Sim<span class="tag" id="proTag">Pro</span></div>
+    <div id="live"><b></b><span>connexion</span></div>
+  </div>
+  <div id="total"><div class="lab">Portefeuille fictif</div><div class="m" id="totV">…</div></div>
+</header>
+<div class="tape"><div class="tapeIn" id="tape">&nbsp;</div></div>
+
+<main>
+  <section class="page on" id="p-market">
+    <div id="intro"></div>
+    <div class="box" id="pulse"></div>
+    <div class="tools">
+      <input id="q" type="search" placeholder="Chercher une crypto" autocomplete="off">
+      <div class="seg" id="sort">
+        <button data-sort="top" class="on">Top</button><button data-sort="up">Hausses</button><button data-sort="down">Baisses</button><button data-sort="mine">Les miennes</button>
+      </div>
+    </div>
+    <div class="box flat" id="list"><div class="empty">Chargement des prix…</div></div>
+    <p class="note"><span class="tag">Argent fictif</span> &nbsp;Les prix sont réels, l'argent ne l'est pas. <span id="upd"></span></p>
+  </section>
+  <section class="page" id="p-wallet"></section>
+  <section class="page" id="p-alerts"></section>
+  <section class="page" id="p-learn"></section>
+  <section class="page" id="p-account"></section>
+</main>
+
+<nav>
+  <button data-tab="market" class="on"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 8-9"/><path d="M15 5h5v5"/></svg>Marché</button>
+  <button data-tab="wallet"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/></svg>Portefeuille</button>
+  <button data-tab="alerts"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 21h4"/></svg>Alertes</button>
+  <button data-tab="learn"><svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 012 2v12a2 2 0 00-2-2H4z"/><path d="M20 5h-6a2 2 0 00-2 2v12a2 2 0 012-2h6z"/></svg>École</button>
+  <button data-tab="account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Compte</button>
+</nav>
+
+<div id="sheet"><div id="sheetIn"></div></div>
+<div id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+'use strict';
+/* ================== RÉGLAGES ================== */
+const START_CASH = 10000;      // euros fictifs au départ
+const FEE = 0.002;             // frais de 0,2 % par achat/vente
+const REFRESH_MS = 60000;      // liste complète rechargée toutes les 60 s
+const LESSON_BONUS = 100;      // euros fictifs par quiz de leçon réussi du premier coup
+const FLASH_BONUS = 10;        // euros fictifs par bonne réponse au quiz éclair (1 fois par jour)
+const API = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=eur&order=market_cap_desc&per_page=40&page=1&sparkline=true&price_change_percentage=24h';
+const LIVE_WS = 'wss://data-stream.binance.vision/ws/!miniTicker@arr';   // prix en direct (toutes les secondes)
+
+/* ================== SAUVEGARDE ================== */
+const KEY = 'cs_state_v1', KEY_M = 'cs_market_v1';
+function fresh(){ return {cash:START_CASH, pos:{}, hist:[], alerts:[], lessons:{}, missions:{}, bonus:0, fees:0, btc0:0, qDay:'', u:0}; }
+let S = fresh();
+try { const r = JSON.parse(localStorage.getItem(KEY)); if (r && typeof r.cash === 'number') S = Object.assign(fresh(), r); } catch(e){}
+function save(){ S.u = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} cloudSave(); checkMissions(); }
+
+/* ================== COMPTES (Supabase) ================== */
+const CFG = window.CS_CONFIG || {};
+const CLOUD = !!(CFG.supabaseUrl && CFG.supabaseKey);
+const SB_LIB = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0/dist/umd/supabase.js';
+let sb = null, sbFail = false, user = null, prof = null, cloudAlerts = null, cloudT = null;
+let authMode = 'login', recovery = false, delArmed = false;
+let seen = {}; try { seen = JSON.parse(localStorage.getItem('cs_seen')) || {}; } catch(e){}
+
+let coins = [], lastUpd = 0;
+try { const m = JSON.parse(localStorage.getItem(KEY_M)); if (m && Array.isArray(m.coins)) { coins = m.coins.map(c => Object.assign(c, {live:[], isLive:false, ref:c.ref || c.current_price})); lastUpd = m.t; } } catch(e){}
+
+/* ================== OUTILS ================== */
+const $ = s => document.querySelector(s);
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function eur(v){
+  if (!isFinite(v)) return '—';
+  const a = Math.abs(v), d = a >= 1 ? 2 : a >= 0.01 ? 4 : 6;
+  return v.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: d}) + ' €';
+}
+function sgn(v){ return (v >= 0 ? '+' : '') + eur(v); }
+function pct(v){ if (!isFinite(v)) return '—'; return (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + ' %'; }
+function qtyFmt(q){ return q.toLocaleString('fr-FR', {maximumFractionDigits: q >= 100 ? 2 : q >= 1 ? 4 : 8}); }
+function cls(v){ return v >= 0 ? 'up' : 'down'; }
+function coin(id){ return coins.find(c => c.id === id); }
+function price(id){ const c = coin(id); return c ? c.current_price : 0; }
+function today(){ return new Date().toISOString().slice(0, 10); }
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2800); }
+function icon(c){
+  const img = /^https:\/\//.test(c.image || '') ? `<img src="${esc(c.image)}" alt="" loading="lazy" onerror="this.remove()">` : '';
+  return `<div class="ico">${img || esc((c.symbol || '?').slice(0,4).toUpperCase())}</div>`;
+}
+function sparkSvg(arr, up){
+  if (!arr || arr.length < 2) return '<svg class="spark"></svg>';
+  const step = Math.max(1, Math.floor(arr.length / 28)), pts = [];
+  for (let i = 0; i < arr.length; i += step) pts.push(arr[i]);
+  pts.push(arr[arr.length - 1]);
+  const mn = Math.min(...pts), mx = Math.max(...pts), r = (mx - mn) || 1;
+  const d = pts.map((v, i) => (i * 56 / (pts.length - 1)).toFixed(1) + ',' + (22 - (v - mn) / r * 20).toFixed(1)).join(' ');
+  return `<svg class="spark" viewBox="0 0 56 24"><polyline points="${d}" fill="none" stroke="${up ? '#4fd68a' : '#ff6a55'}" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+}
+
+/* ================== CALCULS ================== */
+function holdingsValue(){ let v = 0; for (const id in S.pos) v += S.pos[id].qty * price(id); return v; }
+function totalValue(){ return S.cash + holdingsValue(); }
+function baseline(){ return START_CASH + S.bonus; }
+
+function buy(id, amt){
+  const p = price(id);
+  if (!p) return toast('Prix indisponible, réessaie.');
+  if (!(amt > 0)) return toast('Écris un montant en euros.');
+  if (amt > S.cash + 1e-9) return toast("Pas assez d'euros : il te reste " + eur(S.cash));
+  amt = Math.min(amt, S.cash);
+  const q = amt * (1 - FEE) / p;
+  const pos = S.pos[id] || (S.pos[id] = {qty:0, cost:0, t0: Date.now()});
+  pos.qty += q; pos.cost += amt; S.cash -= amt; S.fees += amt * FEE;
+  log('A', id, q, p, amt);
+  toast('Acheté ' + qtyFmt(q) + ' ' + coin(id).symbol.toUpperCase() + ' à ' + eur(p));
+  return true;
+}
+function sell(id, amt, all){
+  const p = price(id), pos = S.pos[id];
+  if (!p) return toast('Prix indisponible, réessaie.');
+  if (!pos || pos.qty <= 0) return toast("Tu n'en as pas.");
+  let q = all ? pos.qty : amt / p;
+  if (!(q > 0)) return toast('Écris un montant en euros.');
+  if (q > pos.qty) q = pos.qty;
+  const got = q * p * (1 - FEE), gain = got - pos.cost * (q / pos.qty);
+  pos.cost *= (1 - q / pos.qty); pos.qty -= q; S.cash += got; S.fees += q * p * FEE;
+  if (gain > 0) S.gainSale = 1;
+  if (pos.qty * p < 0.01) delete S.pos[id];
+  log('V', id, q, p, got);
+  toast('Vendu pour ' + eur(got) + ' (' + sgn(gain) + ')');
+  return true;
+}
+function log(type, id, q, p, amt){
+  S.hist.unshift({t: Date.now(), type, id, sym: coin(id).symbol.toUpperCase(), q, p, amt});
+  if (S.hist.length > 100) S.hist.length = 100;
+  save();
+}
+
+/* ================== MARCHÉ (liste complète, toutes les 60 s) ================== */
+let bySym = {};
+async function loadMarket(){
+  try {
+    const r = await fetch(API, {cache: 'no-store'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (!Array.isArray(d) || !d.length) throw new Error('vide');
+    const old = {}; coins.forEach(c => old[c.id] = c);
+    const liveOk = Date.now() - lastLive < 15000;
+    coins = d.filter(c => c && c.id && typeof c.current_price === 'number').map(c => {
+      const o = old[c.id], keep = o && o.isLive && liveOk;
+      return { id: c.id, symbol: String(c.symbol || ''), name: String(c.name || c.id), image: c.image,
+        ref: c.current_price,
+        current_price: keep ? o.current_price : c.current_price, cap: +c.market_cap || 0,
+        ch: keep ? o.ch : (+c.price_change_percentage_24h || 0),
+        spark: (c.sparkline_in_7d && c.sparkline_in_7d.price) || [],
+        live: o ? o.live : [], isLive: !!keep };
+    });
+    bySym = {};
+    coins.forEach(c => { const k = c.symbol.toUpperCase() + 'USDT'; if (!bySym[k]) bySym[k] = c; });
+    lastUpd = Date.now();
+    try { localStorage.setItem(KEY_M, JSON.stringify({t: lastUpd, coins: coins.map(c => ({id:c.id, symbol:c.symbol, name:c.name, image:c.image, ref:c.ref, current_price:c.current_price, ch:c.ch, cap:c.cap, spark:c.spark}))})); } catch(e){}
+    if (!S.btc0 && price('bitcoin')) { S.btc0 = price('bitcoin'); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }   // sans changer S.u
+    checkAlerts();
+  } catch(e) {
+    if (!coins.length) $('#list').innerHTML = '<div class="empty">Pas de connexion.<br>Vérifie Internet, ça réessaie tout seul.</div>';
+  }
+  renderAll();
+}
+
+/* ================== PRIX EN DIRECT ================== */
+let ws = null, lastLive = 0, eurusd = 0, wsDelay = 1500;
+const dirty = new Set();
+function connectLive(){
+  if (!('WebSocket' in window)) return;
+  try { ws = new WebSocket(LIVE_WS); } catch(e) { return; }
+  ws.onmessage = ev => {
+    let arr; try { arr = JSON.parse(ev.data); } catch(e) { return; }
+    if (!Array.isArray(arr)) return;
+    wsDelay = 1500;
+    for (const t of arr) if (t.s === 'EURUSDT' && +t.c > 0.5) eurusd = +t.c;
+    if (!eurusd) {                       // en attendant le vrai taux : on le déduit du Bitcoin
+      const b = arr.find(t => t.s === 'BTCUSDT'), bc = coin('bitcoin');
+      if (b && bc && bc.ref) eurusd = +b.c / bc.ref;
+    }
+    if (!eurusd) return;
+    for (const t of arr) {
+      const c = bySym[t.s]; if (!c) continue;
+      const p = +t.c / eurusd, o = +t.o;
+      if (!(p > 0) || Math.abs(p / c.ref - 1) > 0.08) continue;   // sécurité : pas la même crypto ou prix bizarre
+      if (p !== c.current_price) { c.dir = p > c.current_price ? 1 : -1; dirty.add(c.id); }
+      c.current_price = p; c.isLive = true;
+      if (o > 0) c.ch = (+t.c - o) / o * 100;
+    }
+    lastLive = Date.now();
+  };
+  ws.onclose = () => { ws = null; setTimeout(connectLive, wsDelay); wsDelay = Math.min(wsDelay * 2, 30000); };
+  ws.onerror = () => { try { ws.close(); } catch(e){} };
+}
+function flash(el, dir){ if (!el) return; el.classList.remove('fu', 'fd'); void el.offsetWidth; el.classList.add(dir > 0 ? 'fu' : 'fd'); }
+function tick(){
+  const on = Date.now() - lastLive < 8000, L = $('#live');
+  L.classList.toggle('on', on); L.lastElementChild.textContent = on ? 'en direct' : (coins.length ? 'prix différés' : 'connexion');
+  if (!dirty.size) return;
+  for (const id of dirty) {
+    const c = coin(id); if (!c) continue;
+    c.live.push(c.current_price); if (c.live.length > 300) c.live.shift();
+    const row = document.querySelector('#list [data-coin="' + id + '"]');
+    if (row) {
+      const p = row.querySelector('.px div'), s = row.querySelector('.px small');
+      p.textContent = eur(c.current_price); flash(p, c.dir);
+      s.textContent = pct(c.ch); s.className = cls(c.ch);
+    }
+    document.querySelectorAll('[data-t="' + id + '"]').forEach(e => { e.lastChild.textContent = eur(c.current_price); e.className = cls(c.ch); });
+  }
+  const openDirty = openId && dirty.has(openId);
+  dirty.clear();
+  renderTotal(); renderPulse(); checkAlerts();
+  if ($('#p-wallet').classList.contains('on')) renderWallet();
+  if (openDirty) sheetLive(true);
+}
+
+/* ================== PAGE MARCHÉ ================== */
+const view = {q: '', sort: 'top'};
+function renderPulse(){
+  if (!coins.length) return;
+  const real = coins.filter(c => Math.abs(c.ch) > 0.05 || c.current_price > 2 || c.current_price < 0.8);   // on ignore les stablecoins
+  const ups = real.filter(c => c.ch >= 0).length, share = ups / (real.length || 1);
+  const best = real.reduce((a, b) => b.ch > a.ch ? b : a, real[0]), worst = real.reduce((a, b) => b.ch < a.ch ? b : a, real[0]);
+  const mood = share >= .7 ? 'Euphorie' : share >= .55 ? 'Plutôt vert' : share > .45 ? 'Indécis' : share > .3 ? 'Plutôt rouge' : 'Ça saigne';
+  $('#pulse').innerHTML = `<div class="pulse">
+      <div><span class="lab">Humeur 24 h</span><b>${mood}</b></div>
+      <div><span class="lab">Plus forte hausse</span><b>${esc(best.symbol.toUpperCase())} <span class="m ${cls(best.ch)}">${pct(best.ch)}</span></b></div>
+      <div><span class="lab">Plus forte baisse</span><b>${esc(worst.symbol.toUpperCase())} <span class="m ${cls(worst.ch)}">${pct(worst.ch)}</span></b></div>
+    </div><div class="bar"><i style="width:${(share * 100).toFixed(0)}%"></i></div>
+    <div class="note" style="margin:6px 0 0">${ups} cryptos sur ${real.length} sont en hausse sur 24 h.</div>`;
+}
+function renderMarket(){
+  $('#intro').innerHTML = introHtml();
+  if (!coins.length) return;
+  renderPulse();
+  let L = coins.map((c, i) => ({c, rk: i + 1}));
+  const q = view.q.trim().toLowerCase();
+  if (q) L = L.filter(x => x.c.name.toLowerCase().includes(q) || x.c.symbol.toLowerCase().includes(q));
+  if (view.sort === 'up') L.sort((a, b) => b.c.ch - a.c.ch);
+  else if (view.sort === 'down') L.sort((a, b) => a.c.ch - b.c.ch);
+  else if (view.sort === 'mine') L = L.filter(x => S.pos[x.c.id]);
+  $('#list').innerHTML = L.length ? L.map(({c, rk}) => `<div class="row" data-coin="${esc(c.id)}"><span class="rk">${rk}</span>${icon(c)}
+      <div class="nm"><div>${esc(c.name)}</div><small>${esc(c.symbol)}${S.pos[c.id] ? ' · en portefeuille' : ''}</small></div>
+      ${sparkSvg(c.spark, c.ch >= 0)}
+      <div class="px"><div>${eur(c.current_price)}</div><small class="${cls(c.ch)}">${pct(c.ch)}</small></div></div>`).join('')
+    : `<div class="empty">${view.sort === 'mine' ? "Tu n'as encore aucune crypto." : 'Rien trouvé.'}</div>`;
+  $('#upd').textContent = lastUpd ? 'Liste mise à jour à ' + new Date(lastUpd).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}) + '.' : '';
+  const t = coins.slice(0, 14).map(c => `<span data-t="${esc(c.id)}" class="${cls(c.ch)}"><em>${esc(c.symbol.toUpperCase())}</em>${eur(c.current_price)}</span>`).join('');
+  $('#tape').innerHTML = t + t;
+}
+
+/* ================== LE COACH (analyse ton portefeuille) ================== */
+function coach(){
+  const tips = [], tot = totalValue(), ids = Object.keys(S.pos);
+  if (!ids.length && !S.hist.length) return [{k:'', t:"Commence petit : mets 500 € sur une grosse crypto et regarde comment ça bouge pendant une heure."}];
+  let top = null;
+  for (const id of ids) { const v = S.pos[id].qty * price(id); if (!top || v > top.v) top = {id, v}; }
+  if (top && top.v / tot > 0.6) { const c = coin(top.id);
+    tips.push({k:'bad', t:`${Math.round(top.v / tot * 100)} % de ton portefeuille est sur ${c ? c.name : top.id}. Si ça chute de 20 %, tu perds ${eur(top.v * 0.2)} d'un coup.`}); }
+  const day = S.hist.filter(h => Date.now() - h.t < 864e5).length;
+  if (day >= 8) tips.push({k:'bad', t:`${day} opérations en 24 h. Chaque aller-retour te coûte 0,4 % : tu as déjà laissé ${eur(S.fees)} en frais.`});
+  for (const id of ids) {
+    const p = S.pos[id], v = p.qty * price(id), g = (v / p.cost - 1) * 100, c = coin(id); if (!c || !p.cost) continue;
+    if (g <= -15) tips.push({k:'bad', t:`${c.name} est à ${pct(g)} depuis ton achat. La bonne question : est-ce que tu l'achèterais encore aujourd'hui ?`});
+    else if (g >= 20) tips.push({k:'good', t:`${c.name} est à ${pct(g)}. Tant que tu n'as pas vendu, ce gain n'existe que sur le papier.`});
+  }
+  if (ids.length && S.cash / tot < 0.03) tips.push({k:'', t:"Tu n'as presque plus d'euros de côté. Si le marché baisse, tu ne pourras pas en profiter pour acheter moins cher."});
+  if (ids.length >= 4 && !(top && top.v / tot > 0.6)) tips.push({k:'good', t:`Ton argent est réparti sur ${ids.length} cryptos : c'est plus solide qu'un seul gros pari.`});
+  if (S.btc0 && S.hist.length && price('bitcoin')) {
+    const me = (tot / baseline() - 1) * 100, btc = (price('bitcoin') / S.btc0 - 1) * 100;
+    tips.push({k: me >= btc ? 'good' : '', t:`Toi : ${pct(me)}. Quelqu'un qui aurait juste gardé du Bitcoin depuis ton arrivée : ${pct(btc)}.`});
+  }
+  return tips.slice(0, 3);
+}
+
+/* ================== PORTEFEUILLE ================== */
+let resetArmed = false;
+function renderTotal(){
+  const tot = totalValue(), g = tot - baseline();
+  $('#totV').textContent = eur(tot); $('#totV').className = 'm ' + cls(g);
+}
+function renderWallet(){
+  const tot = totalValue(), gain = tot - baseline(), gp = gain / baseline() * 100;
+  const ids = Object.keys(S.pos).sort((a, b) => S.pos[b].qty * price(b) - S.pos[a].qty * price(a));
+  let h = `<div class="box">
+      <span class="lab">Valeur totale</span>
+      <div class="big">${eur(tot)}</div>
+      <div class="m ${cls(gain)}" style="font-size:14px">${sgn(gain)} · ${pct(gp)} depuis le début</div>
+      <div class="g3" style="margin-top:14px">
+        <div class="kv"><span class="lab">Euros</span><b>${eur(S.cash)}</b></div>
+        <div class="kv"><span class="lab">Cryptos</span><b>${eur(holdingsValue())}</b></div>
+        <div class="kv"><span class="lab">Frais payés</span><b>${eur(S.fees)}</b></div>
+      </div></div>
+    <h2>Le coach</h2><div class="box">${coach().map(t => `<div class="tip ${t.k}">${esc(t.t)}</div>`).join('')}</div>
+    <h2>Mes cryptos</h2>`;
+  if (!ids.length) h += `<div class="box empty">Rien pour l'instant.<br>Va dans Marché et touche une crypto.</div>`;
+  else h += '<div class="box flat">' + ids.map(id => {
+    const c = coin(id) || {id, symbol:id, name:id}, p = S.pos[id], v = p.qty * price(id), g = v - p.cost;
+    return `<div class="row" data-coin="${esc(id)}">${icon(c)}
+      <div class="nm"><div>${esc(c.name)}</div><small>${qtyFmt(p.qty)} ${esc(c.symbol)} · ${Math.round(v / tot * 100)} %</small></div>
+      <div class="px"><div>${eur(v)}</div><small class="${cls(g)}">${sgn(g)}</small></div></div>`;
+  }).join('') + '</div>';
+  h += '<h2>Historique</h2>';
+  if (!S.hist.length) h += '<div class="box empty">Aucune opération.</div>';
+  else h += '<div class="box">' + S.hist.slice(0, 30).map(x =>
+    `<div class="hist"><span><b class="${x.type === 'A' ? 'up' : 'down'}">${x.type === 'A' ? 'Achat' : 'Vente'}</b> ${qtyFmt(x.q)} ${esc(x.sym)}<br><small>${new Date(x.t).toLocaleString('fr-FR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})} · à ${eur(x.p)}</small></span><b class="m">${eur(x.amt)}</b></div>`
+  ).join('') + '</div>';
+  h += `<button class="btn ${resetArmed ? 'sell' : 'ghost'}" id="reset">${resetArmed ? 'Touche encore pour confirmer' : 'Recommencer à zéro'}</button>`;
+  $('#p-wallet').innerHTML = h;
+}
+
+/* ================== ALERTES ================== */
+function isPro(){ return !!(prof && prof.premium_until && new Date(prof.premium_until) > new Date()); }
+function myAlerts(){ return user ? (cloudAlerts || []) : S.alerts; }
+function alertMax(){ return user ? (isPro() ? (CFG.proAlerts || 30) : (CFG.freeAlerts || 5)) : 20; }
+function fromRow(r){ return {k: r.id, id: r.coin_id, dir: r.dir, target: r.target, email: r.email, done: r.done || !!seen[r.id]}; }
+async function addAlert(id, target, byMail){
+  const p = price(id), c = coin(id);
+  if (!(target > 0)) { toast('Écris un prix.'); return false; }
+  if (!p || !c) { toast('Prix indisponible.'); return false; }
+  const dir = target >= p ? 'up' : 'down';
+  if (myAlerts().filter(a => !a.done).length >= alertMax()) {
+    toast(user && !isPro() ? `Limite de ${alertMax()} alertes en gratuit. En Pro : ${CFG.proAlerts || 30}.` : "Tu as atteint le nombre maximum d'alertes.");
+    return false;
+  }
+  const mail = !!byMail && isPro();
+  if (user) {
+    if (!cloudAlerts) { toast('Connexion au compte en cours, réessaie.'); return false; }
+    const {data, error} = await sb.from('alerts').insert({coin_id: id, symbol: c.symbol, name: c.name, dir, target, email: mail}).select().single();
+    if (error) { toast(/LIMITE/.test(error.message) ? "Limite d'alertes atteinte." : 'Erreur : ' + error.message); return false; }
+    cloudAlerts.push(fromRow(data));
+  } else {
+    S.alerts.push({k: Date.now() + '' + Math.floor(Math.random() * 1000), id, dir, target, done: false});
+    save();
+  }
+  if ('Notification' in window && Notification.permission === 'default') { try { Notification.requestPermission(); } catch(e){} }
+  S.madeAlert = 1; save();
+  toast(mail ? 'Alerte créée : tu recevras aussi un e-mail' : 'Alerte enregistrée');
+  return true;
+}
+async function deleteAlert(k){
+  if (user) {
+    const {error} = await sb.from('alerts').delete().eq('id', k);
+    if (error) return toast('Erreur : ' + error.message);
+    cloudAlerts = (cloudAlerts || []).filter(a => a.k !== k);
+  } else { S.alerts = S.alerts.filter(a => a.k !== k); save(); }
+  renderAlerts();
+}
+function checkAlerts(){
+  let hit = false;
+  for (const a of myAlerts()) {
+    if (a.done) continue;
+    const p = price(a.id); if (!p) continue;
+    if ((a.dir === 'up' && p >= a.target) || (a.dir === 'down' && p <= a.target)) {
+      a.done = true; a.at = Date.now(); hit = true;
+      if (user) { seen[a.k] = 1; try { localStorage.setItem('cs_seen', JSON.stringify(seen)); } catch(e){} }
+      const c = coin(a.id), msg = `${c.name} est ${a.dir === 'up' ? 'passé au-dessus de' : 'passé sous'} ${eur(a.target)} (maintenant ${eur(p)})`;
+      toast('Alerte : ' + msg);
+      try { if ('Notification' in window && Notification.permission === 'granted') new Notification('CryptoSim', {body: msg}); } catch(e){}
+      try { navigator.vibrate && navigator.vibrate([120, 60, 120]); } catch(e){}
+    }
+  }
+  if (hit) { save(); renderAlerts(); }
+}
+function renderAlerts(){
+  const L = myAlerts(), pend = L.filter(a => !a.done).length;
+  let h = `<h2 style="margin-top:4px">Mes alertes de prix <span class="lab" style="float:right">${pend} / ${alertMax()}</span></h2>`;
+  if (user && !cloudAlerts) h += '<div class="box empty">Chargement de tes alertes…</div>';
+  else if (!L.length) h += `<div class="box empty">Aucune alerte.<br>Touche une crypto dans Marché, puis descends jusqu'à « Alerte de prix ».</div>`;
+  else h += '<div class="box flat">' + L.map(a => {
+    const c = coin(a.id) || {id:a.id, symbol:a.id, name:a.id};
+    return `<div class="row" style="cursor:default">${icon(c)}
+      <div class="nm"><div>${esc(c.name)} ${a.dir === 'up' ? 'au-dessus de' : 'sous'} <span class="m">${eur(a.target)}</span></div>
+      <small style="text-transform:none" class="${a.done ? 'up' : ''}">${a.done ? 'Déclenchée' : 'En attente'}${a.email ? ' · par e-mail' : ''}</small></div>
+      <button class="del" data-del="${esc(a.k)}" aria-label="Supprimer">✕</button></div>`;
+  }).join('') + '</div>';
+  h += '<p class="note">Les alertes sont surveillées en direct tant que le site est ouvert.' +
+    (isPro() ? ' Celles « par e-mail » sont aussi surveillées site fermé.' : CLOUD ? ' Avec CryptoSim Pro, tu les reçois aussi par e-mail, même site fermé.' : '') + '</p>';
+  $('#p-alerts').innerHTML = h;
+}
+
+/* ================== ÉCOLE : LEÇONS ================== */
+const LEVELS = ['Les bases', 'Comprendre', 'Ne pas se faire avoir'];
+const LESSONS = [
+  {id:'l1', lv:0, t:"C'est quoi une cryptomonnaie ?",
+   p:"C'est de l'argent 100 % numérique. Il n'y a pas de banque au milieu : les échanges sont notés dans un grand registre public, la blockchain, copié sur des milliers d'ordinateurs.",
+   q:'Qui contrôle le Bitcoin ?', a:['Une banque', "Personne en particulier : un réseau d'ordinateurs", 'Le gouvernement américain'], ok:1},
+  {id:'l2', lv:0, t:'Pourquoi les prix bougent autant ?',
+   p:"Le prix dépend seulement de ce que les gens sont prêts à payer. Une nouvelle, une rumeur ou un gros vendeur peut le faire bouger de 10 % en une journée. On appelle ça la volatilité.",
+   q:'Une crypto peut-elle perdre 50 % en quelques semaines ?', a:["Oui, c'est déjà arrivé plein de fois", "Non, c'est impossible", 'Seulement les petites'], ok:0},
+  {id:'l3', lv:0, t:'La règle n°1',
+   p:"N'investis jamais de l'argent dont tu as besoin. Beaucoup de débutants perdent parce qu'ils achètent quand tout le monde en parle (prix haut) et vendent en panique (prix bas).",
+   q:'Quand les débutants achètent-ils souvent ?', a:['Quand le prix est bas', 'Quand tout le monde en parle et que le prix est déjà haut', 'Jamais'], ok:1},
+  {id:'l4', lv:0, t:'Diversifier',
+   p:"Tout mettre sur une seule crypto, c'est risqué : si elle chute, tout chute. Répartir sur plusieurs limite la casse. Le Bitcoin et l'Ethereum sont les plus grosses et les moins fragiles.",
+   q:'Diversifier, ça veut dire…', a:['Tout mettre sur une seule crypto', 'Répartir son argent sur plusieurs', 'Acheter très vite'], ok:1},
+  {id:'l5', lv:0, t:'Les arnaques',
+   p:"« Gagne 500 € par jour », « double tes bitcoins », un inconnu qui te conseille une crypto géniale : ce sont des arnaques. Personne ne peut garantir un gain.",
+   q:"On te promet un gain garanti de 20 % par semaine. C'est…", a:['Une bonne affaire', 'Une arnaque', 'Normal en crypto'], ok:1},
+  {id:'l6', lv:0, t:'Les frais',
+   p:"Chaque achat et chaque vente coûte des frais (ici 0,2 %, comme sur une vraie plateforme). Acheter et vendre sans arrêt fait fondre ton argent, même si le prix ne bouge pas.",
+   q:'Que se passe-t-il si tu achètes et vends 50 fois par jour ?', a:['Tu gagnes à coup sûr', 'Les frais mangent ton argent', 'Rien'], ok:1},
+
+  {id:'l7', lv:1, t:'La blockchain, concrètement',
+   p:"Les transactions sont regroupées en blocs. Chaque bloc contient l'empreinte du bloc d'avant : si quelqu'un modifie un vieux bloc, toute la suite ne colle plus et le réseau le refuse.",
+   q:'Pourquoi est-il presque impossible de tricher dans une blockchain ?', a:['Parce que la police surveille', 'Parce que chaque bloc dépend du précédent et que tout le réseau vérifie', "Parce qu'elle est secrète"], ok:1},
+  {id:'l8', lv:1, t:'Bitcoin et Ethereum',
+   p:"Le Bitcoin sert surtout de réserve de valeur, un peu comme de l'or numérique. Ethereum est une plateforme : on peut y faire tourner des programmes (les smart contracts) et créer d'autres cryptos dessus.",
+   q:"Qu'est-ce qu'Ethereum permet en plus ?", a:['Faire tourner des programmes', "Imprimer des billets", 'Rien de plus'], ok:0},
+  {id:'l9', lv:1, t:'Les stablecoins',
+   p:"L'USDT et l'USDC sont des cryptos faites pour valoir toujours environ 1 dollar. Elles servent à se mettre à l'abri sans quitter le monde crypto. Elles ne font pas gagner d'argent toutes seules.",
+   q:"À quoi sert un stablecoin ?", a:['À devenir riche vite', 'À garder une valeur stable', 'À miner du Bitcoin'], ok:1},
+  {id:'l10', lv:1, t:'Le prix ne veut rien dire tout seul',
+   p:"Une crypto à 0,001 € n'est pas « pas chère ». Ce qui compte, c'est la capitalisation : le prix multiplié par le nombre de pièces. Avec des milliards de pièces, un prix minuscule peut déjà valoir très cher.",
+   q:'Une crypto à 0,0001 € est-elle forcément une bonne affaire ?', a:['Oui, elle ne peut que monter', "Non, il faut regarder la capitalisation", 'Oui si elle a un joli logo'], ok:1},
+  {id:'l11', lv:1, t:'Wallet et phrase secrète',
+   p:"Un wallet (portefeuille) ne contient pas vraiment tes cryptos : il contient la clé qui prouve qu'elles sont à toi. Cette clé est résumée par 12 ou 24 mots. Qui a ces mots a tout. Si tu les perds, personne ne peut te les rendre.",
+   q:'Quelqu\'un du « support » te demande ta phrase secrète. Tu fais quoi ?', a:['Je la donne, c\'est le support', 'Je ne la donne jamais, à personne', 'Je donne seulement la moitié'], ok:1},
+  {id:'l12', lv:1, t:'21 millions et le halving',
+   p:"Il n'y aura jamais plus de 21 millions de bitcoins. Environ tous les 4 ans, la récompense des mineurs est divisée par deux : c'est le halving. Il y a donc de moins en moins de nouveaux bitcoins créés.",
+   q:"Le halving, c'est…", a:['Le prix divisé par deux', 'La création de nouveaux bitcoins divisée par deux', 'Les frais divisés par deux'], ok:1},
+
+  {id:'l13', lv:2, t:'FOMO et panique',
+   p:"FOMO, c'est la peur de rater le train : tu vois +40 % et tu achètes au sommet. La panique, c'est l'inverse : tu vends tout au pire moment. Les deux font perdre. Décide avant ce que tu feras si ça monte ou si ça baisse.",
+   q:"Une crypto vient de prendre +60 % en un jour et tout le monde en parle. Le plus prudent ?", a:['Tout mettre dessus vite', "Ne pas courir après : le plus gros de la hausse est peut-être passé", 'Emprunter pour en acheter'], ok:1},
+  {id:'l14', lv:2, t:'Acheter petit à petit (DCA)',
+   p:"Au lieu de tout miser d'un coup, certains achètent la même petite somme chaque semaine ou chaque mois. Parfois le prix est haut, parfois bas : ça fait une moyenne et ça évite de tout mettre au pire moment.",
+   q:"Le DCA, c'est…", a:['Acheter tout en une fois', 'Acheter la même somme régulièrement', 'Ne jamais vendre'], ok:1},
+  {id:'l15', lv:2, t:'Memecoins et pump and dump',
+   p:"Un memecoin n'a souvent aucune utilité : son prix tient seulement à la mode. Dans un « pump and dump », un groupe fait monter le prix en faisant du bruit, puis revend tout aux derniers arrivés, qui se retrouvent avec une pièce qui ne vaut plus rien.",
+   q:'Dans un pump and dump, qui perd ?', a:['Ceux qui ont lancé le mouvement', 'Les derniers à acheter', 'Personne'], ok:1},
+  {id:'l16', lv:2, t:'Le piège des pourcentages',
+   p:"Si tu perds 50 %, il ne suffit pas de regagner 50 % : il faut +100 % pour revenir au départ. 100 € qui perdent 50 % font 50 €. 50 € qui gagnent 50 % font 75 €. Les pertes pèsent plus lourd que les gains.",
+   q:'Après une baisse de 50 %, combien faut-il pour revenir au prix de départ ?', a:['+50 %', '+75 %', '+100 %'], ok:2},
+  {id:'l17', lv:2, t:"L'effet de levier",
+   p:"Le levier, c'est jouer avec de l'argent emprunté : avec un levier ×10, une hausse de 5 % te fait gagner 50 %… mais une baisse de 10 % efface toute ta mise. C'est comme ça que la plupart des débutants perdent tout en quelques minutes.",
+   q:'Avec un levier ×10, une baisse de 10 % te fait perdre…', a:['10 % de ta mise', 'La moitié de ta mise', 'Toute ta mise'], ok:2},
+  {id:'l18', lv:2, t:'Les règles en France',
+   p:"Il faut être majeur pour ouvrir un compte sur une plateforme. Les gains réalisés en revendant des cryptos contre des euros doivent être déclarés aux impôts. Une plateforme sérieuse est enregistrée auprès de l'AMF.",
+   q:'Tu revends des cryptos contre des euros avec un gain. Il faut…', a:['Ne rien dire', 'Le déclarer aux impôts', 'Tout réinvestir tout de suite'], ok:1}
+];
+function rank(){ const n = LESSONS.filter(l => S.lessons[l.id]).length; return n >= 18 ? 'Incollable' : n >= 12 ? 'Initié' : n >= 6 ? 'Apprenti' : 'Curieux'; }
+const missed = {};
+function answer(btn){
+  const l = LESSONS.find(x => x.id === btn.dataset.lesson), i = +btn.dataset.i;
+  if (!l || S.lessons[l.id]) return;
+  if (i === l.ok) {
+    S.lessons[l.id] = 1;
+    if (!missed[l.id]) { S.cash += LESSON_BONUS; S.bonus += LESSON_BONUS; toast('Juste. +' + LESSON_BONUS + ' € fictifs'); }
+    else toast('Juste.');
+    save(); renderAll();
+  } else { missed[l.id] = 1; btn.classList.add('ko'); toast('Raté. Relis le texte au-dessus.'); }
+}
+
+/* ================== ÉCOLE : QUIZ ÉCLAIR (vrai / faux) ================== */
+const VF = [
+  ["Il n'y aura jamais plus de 21 millions de bitcoins.", true, "C'est écrit dans le code depuis le début."],
+  ["Le Bitcoin a été lancé en 2009.", true, "Le premier bloc date de janvier 2009."],
+  ["On sait qui est vraiment Satoshi Nakamoto, le créateur du Bitcoin.", false, "Personne n'a jamais prouvé son identité."],
+  ["On est obligé d'acheter un bitcoin entier.", false, "On peut en acheter une toute petite fraction."],
+  ["Ta banque peut annuler une transaction Bitcoin.", false, "Une fois validée, elle est définitive."],
+  ["Un stablecoin est fait pour garder un prix stable.", true, "Souvent 1 dollar."],
+  ["Après −50 %, il suffit de +50 % pour revenir au prix de départ.", false, "Il faut +100 %."],
+  ["Ethereum permet de faire tourner des programmes appelés smart contracts.", true, "C'est sa grande différence avec le Bitcoin."],
+  ["Une crypto à 0,0001 € a forcément plus de chances de monter.", false, "Le prix seul ne dit rien : il faut regarder la capitalisation."],
+  ["Si tu perds ta phrase secrète, un service client peut te la redonner.", false, "Personne d'autre que toi ne la connaît."],
+  ["En France, les gains en crypto peuvent être imposés.", true, "Ils doivent être déclarés quand on revend contre des euros."],
+  ["Le halving a lieu environ tous les 4 ans.", true, "La récompense des mineurs est alors divisée par deux."],
+  ["Si une crypto a monté l'an dernier, elle montera cette année.", false, "Le passé ne garantit jamais la suite."],
+  ["Tout le monde peut consulter les transactions Bitcoin.", true, "La blockchain est publique."],
+  ["Un memecoin a en général une vraie utilité technique.", false, "Son prix repose surtout sur la mode."],
+  ["FOMO veut dire la peur de rater une occasion.", true, "Fear Of Missing Out."],
+  ["Laisser ses cryptos sur une plateforme est sans aucun risque.", false, "Des plateformes ont déjà fait faillite, comme FTX en 2022."],
+  ["Le Bitcoin a déjà perdu plus de 70 % après un sommet.", true, "C'est arrivé plusieurs fois, par exemple en 2018 et en 2022."],
+  ["Un rug pull, c'est quand les créateurs d'un projet partent avec l'argent.", true, "Littéralement « tirer le tapis »."],
+  ["Miner du Bitcoin consomme très peu d'électricité.", false, "Le réseau consomme autant que certains pays."],
+  ["La capitalisation, c'est le prix multiplié par le nombre de pièces.", true, "C'est elle qui mesure la taille d'une crypto."],
+  ["En France, il faut être majeur pour ouvrir un compte sur une plateforme crypto.", true, "C'est pour ça qu'un simulateur est pratique pour s'entraîner."],
+  ["Acheter la même somme régulièrement s'appelle le DCA.", true, "Dollar Cost Averaging."],
+  ["Si un influenceur recommande une crypto, c'est qu'elle est sûre.", false, "Il est souvent payé pour en parler."],
+  ["Avec un levier ×10, une baisse de 10 % efface toute la mise.", true, "C'est ce qu'on appelle se faire liquider."],
+  ["Les frais ne comptent pas quand on fait beaucoup d'opérations.", false, "C'est l'inverse : plus tu en fais, plus ils pèsent."],
+  ["Le Bitcoin est la première cryptomonnaie.", true, "Toutes les autres sont venues après."],
+  ["Un NFT est une pièce qu'on peut échanger contre n'importe quelle autre identique.", false, "Un NFT est unique, c'est tout le principe."],
+  ["Les transactions Bitcoin affichent ton nom et ton prénom.", false, "Elles montrent des adresses, pas des noms."],
+  ["On peut perdre tout l'argent qu'on a investi dans une crypto.", true, "Des cryptos sont déjà tombées à zéro, comme Terra Luna en 2022."]
+];
+let qz = null;
+function startQuiz(){
+  const idx = VF.map((_, i) => i);
+  for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+  qz = {list: idx.slice(0, 5), i: 0, score: 0, ans: null, paid: S.qDay !== today()};
+  renderLearn();
+}
+function quizAnswer(v){
+  if (!qz || qz.ans !== null) return;
+  qz.ans = v; if (v === VF[qz.list[qz.i]][1]) qz.score++;
+  renderLearn();
+}
+function quizNext(){
+  if (!qz) return;
+  qz.i++; qz.ans = null;
+  if (qz.i >= qz.list.length) {
+    qz.end = true;
+    if (qz.score === qz.list.length) { S.perfect = 1; save(); }
+    if (qz.paid && qz.score) { const g = qz.score * FLASH_BONUS; S.cash += g; S.bonus += g; S.qDay = today(); save(); renderTotal(); toast('+' + g + ' € fictifs'); }
+    else if (qz.paid) { S.qDay = today(); save(); }
+  }
+  renderLearn();
+}
+function quizHtml(){
+  if (!qz) return `<div class="box"><span class="lab">Quiz éclair</span>
+      <p style="margin:6px 0 12px;line-height:1.45">5 affirmations tirées au hasard parmi ${VF.length}. Vrai ou faux ?<br>
+      <span class="note" style="margin:0">${S.qDay === today() ? "Récompense du jour déjà prise : tu peux rejouer pour t'entraîner." : FLASH_BONUS + ' € fictifs par bonne réponse, une fois par jour.'}</span></p>
+      <button class="btn gold" id="qzGo">Lancer le quiz</button></div>`;
+  if (qz.end) return `<div class="box"><span class="lab">Quiz éclair · résultat</span>
+      <div class="big" style="margin:6px 0">${qz.score} / ${qz.list.length}</div>
+      <p class="note" style="margin:0 0 12px">${qz.score === 5 ? 'Sans faute.' : qz.score >= 3 ? 'Pas mal. Les leçons en dessous couvrent le reste.' : 'Les leçons en dessous vont t\'aider.'}</p>
+      <button class="btn ghost" id="qzGo">Rejouer</button></div>`;
+  const [txt, truth, why] = VF[qz.list[qz.i]], done = qz.ans !== null, good = qz.ans === truth;
+  return `<div class="box"><span class="lab">Quiz éclair · ${qz.i + 1} / ${qz.list.length}</span>
+      <p style="font-weight:700;font-size:16.5px;line-height:1.4;margin:8px 0 12px">${esc(txt)}</p>
+      ${done ? `<div class="tip ${good ? 'good' : 'bad'}"><b>${good ? 'Juste.' : 'Raté.'}</b> C'est ${truth ? 'vrai' : 'faux'}. ${esc(why)}</div>
+        <button class="btn gold" id="qzNext">${qz.i + 1 < qz.list.length ? 'Suivante' : 'Voir mon score'}</button>`
+      : `<div class="g2"><button class="btn ghost" data-vf="1">Vrai</button><button class="btn ghost" data-vf="0">Faux</button></div>`}</div>`;
+}
+function renderLearn(){
+  const done = LESSONS.filter(l => S.lessons[l.id]).length;
+  let h = `<div class="box"><div class="g2"><div class="kv"><span class="lab">Ton niveau</span><b style="font-family:var(--sans);font-size:19px;font-weight:900">${rank()}</b></div>
+      <div class="kv" style="text-align:right"><span class="lab">Leçons validées</span><b>${done} / ${LESSONS.length}</b></div></div>
+      <div class="prog"><i style="width:${done / LESSONS.length * 100}%"></i></div></div>` + quizHtml() + missionsHtml();
+  LEVELS.forEach((name, lv) => {
+    h += `<h2>${lv + 1}. ${name}</h2>` + LESSONS.filter(l => l.lv === lv).map(l => {
+      const st = S.lessons[l.id];
+      return `<div class="box less">${st ? '<span class="done">VALIDÉ</span>' : ''}<h3>${esc(l.t)}</h3><p>${esc(l.p)}</p>
+        <div class="q">${esc(l.q)}</div>
+        ${l.a.map((a, i) => `<button class="ans ${st && i === l.ok ? 'ok' : ''}" data-lesson="${l.id}" data-i="${i}" ${st ? 'disabled' : ''}>${esc(a)}</button>`).join('')}</div>`;
+    }).join('');
+  });
+  h += lexiqueHtml();
+  h += `<h2>À propos</h2><div class="box less">
+      <p><b>CryptoSim est un jeu de simulation.</b> Tout l'argent est fictif : on ne peut ni déposer, ni retirer, ni gagner de vrai argent ici.</p>
+      <p>Ce site ne donne pas de conseils financiers. Investir dans les cryptos comporte un vrai risque de perte.</p>
+      <p style="margin:0"><b>Vie privée :</b> le compte est facultatif. Sans compte, ta partie reste dans ton navigateur. Prix : CoinGecko et Binance.
+      ${CLOUD ? '<a href="legal.html" target="_blank">Conditions et confidentialité</a>' : ''}</p></div>`;
+  $('#p-learn').innerHTML = h;
+}
+
+/* ================== ÉCOLE : MISSIONS ================== */
+const MISSION_BONUS = 200;
+const MISSIONS = [
+  {id:'m1', t:'Premier achat', d:"Achète n'importe quelle crypto.",
+   why:'Tu vois comment des euros deviennent une quantité de crypto, frais compris.', ok:() => S.hist.some(h => h.type === 'A')},
+  {id:'m2', t:'Ne pas tout miser sur un seul cheval', d:'Possède au moins 3 cryptos différentes en même temps.',
+   why:"Si l'une s'effondre, les autres limitent la casse.", ok:() => Object.keys(S.pos).length >= 3},
+  {id:'m3', t:'Le refuge', d:'Achète un stablecoin (USDT ou USDC).',
+   why:"Observe son prix : il ne bouge presque pas. C'est tout son intérêt.", ok:() => S.hist.some(h => h.type === 'A' && isStable(coin(h.id) || {id: h.id, symbol: h.sym}))},
+  {id:'m4', t:'Décider à froid', d:'Crée une alerte de prix.',
+   why:"Fixer un prix à l'avance évite d'acheter ou de vendre sous le coup de l'émotion.", ok:() => !!S.madeAlert},
+  {id:'m5', t:'Un gain, un vrai', d:'Vends une crypto plus cher que tu ne l\'as payée.',
+   why:"Tant que tu n'as pas vendu, un gain n'existe que sur le papier.", ok:() => !!S.gainSale},
+  {id:'m6', t:'Patience', d:'Garde une crypto au moins 24 heures.',
+   why:'Les prix bougent dans tous les sens à la minute. Sur plusieurs jours, on voit mieux la tendance.', ok:() => Object.values(S.pos).some(p => p.t0 && Date.now() - p.t0 > 864e5)},
+  {id:'m7', t:'Les bases', d:'Valide les 6 leçons du niveau 1.',
+   why:'Avec ça, tu en sais déjà plus que beaucoup de gens qui achètent de la crypto.', ok:() => LESSONS.filter(l => l.lv === 0).every(l => S.lessons[l.id])},
+  {id:'m8', t:'Sans faute', d:'Fais 5 / 5 au quiz éclair.',
+   why:'Preuve que les notions sont bien rentrées.', ok:() => !!S.perfect}
+];
+let inMission = false;
+function checkMissions(){
+  if (inMission) return;
+  inMission = true;
+  try {
+    for (const m of MISSIONS) {
+      if (S.missions[m.id] || !m.ok()) continue;
+      S.missions[m.id] = 1; S.cash += MISSION_BONUS; S.bonus += MISSION_BONUS;
+      save(); renderTotal();
+      setTimeout(() => toast('Mission réussie : ' + m.t + ' (+' + MISSION_BONUS + ' € fictifs)'), 2200);
+      if ($('#p-learn').classList.contains('on')) setTimeout(renderLearn, 0);
+    }
+  } finally { inMission = false; }
+}
+function missionsHtml(){
+  const done = MISSIONS.filter(m => S.missions[m.id]).length;
+  return `<h2>Missions <span class="lab" style="float:right">${done} / ${MISSIONS.length}</span></h2>
+    <div class="box"><p class="note" style="margin:0 0 4px">Chaque mission t'apprend un bon réflexe. +${MISSION_BONUS} € fictifs à chaque fois.</p>` +
+    MISSIONS.map(m => `<div class="mis ${S.missions[m.id] ? 'ok' : ''}"><div class="st">${S.missions[m.id] ? '✓' : ''}</div>
+      <div><b>${esc(m.t)}</b><span>${esc(m.d)}${S.missions[m.id] ? ' ' + esc(m.why) : ''}</span></div></div>`).join('') + '</div>';
+}
+
+/* ================== ÉCOLE : LEXIQUE ================== */
+const LEXIQUE = [
+  ['Blockchain', "Grand registre public où sont notées toutes les transactions. Il est copié sur des milliers d'ordinateurs, ce qui le rend très difficile à falsifier."],
+  ['Capitalisation', "Prix d'une crypto multiplié par le nombre de pièces en circulation. C'est la vraie mesure de sa taille, bien plus que son prix."],
+  ['Volatilité', "À quel point un prix bouge vite et fort. Les cryptos sont très volatiles : ±10 % en un jour, ça arrive."],
+  ['Stablecoin', "Crypto conçue pour garder une valeur fixe, en général 1 dollar (USDT, USDC)."],
+  ['Wallet', "Portefeuille qui garde la clé prouvant que tes cryptos t'appartiennent."],
+  ['Phrase secrète (seed)', "12 ou 24 mots qui permettent de récupérer un wallet. Qui les connaît possède tout. Ne jamais les donner."],
+  ['Plateforme d\'échange', "Site où l'on achète et vend des cryptos contre des euros (exchange). En France, il faut être majeur."],
+  ['Frais', "Ce que prend la plateforme à chaque achat ou vente. Ici 0,2 %. Ils s'additionnent vite si on fait beaucoup d'opérations."],
+  ['Minage', "Travail des ordinateurs qui valident les blocs de Bitcoin. En échange, ils reçoivent des bitcoins neufs."],
+  ['Halving', "Tous les 4 ans environ, la récompense des mineurs de Bitcoin est divisée par deux."],
+  ['Smart contract', "Petit programme qui tourne sur une blockchain (surtout Ethereum) et s'exécute tout seul."],
+  ['NFT', "Jeton unique sur une blockchain, souvent lié à une image ou un objet numérique."],
+  ['Memecoin', "Crypto créée pour s'amuser ou suivre une mode (Dogecoin, Shiba Inu). Très spéculative."],
+  ['FOMO', "Fear Of Missing Out : la peur de rater une occasion, qui pousse à acheter trop tard et trop cher."],
+  ['DCA', "Acheter la même petite somme à intervalles réguliers, pour lisser le prix d'achat."],
+  ['Effet de levier', "Investir avec de l'argent emprunté. Les gains sont multipliés… les pertes aussi."],
+  ['Rug pull', "Arnaque où les créateurs d'un projet partent avec l'argent des investisseurs."],
+  ['Plus-value', "Gain fait quand on revend plus cher qu'on a acheté. En France, elle se déclare aux impôts."],
+  ['Bull / bear market', "Bull : période où les prix montent longtemps. Bear : période où ils baissent longtemps."],
+  ['Satoshi', "La plus petite unité du Bitcoin : 0,00000001 BTC. Porte le nom du créateur du Bitcoin."]
+];
+function lexiqueHtml(){
+  return `<h2>Lexique</h2><div class="box" style="padding:4px 13px">` +
+    LEXIQUE.map(([m, d]) => `<details class="lx"><summary>${esc(m)}</summary><p>${esc(d)}</p></details>`).join('') + '</div>';
+}
+
+/* ================== FICHES « À SAVOIR » ================== */
+const FACTS = {
+  bitcoin: "La première cryptomonnaie, lancée en 2009 par un certain Satoshi Nakamoto, dont personne ne connaît la vraie identité. Il n'y aura jamais plus de 21 millions de bitcoins.",
+  ethereum: "Lancé en 2015. C'est surtout une plateforme : on y fait tourner des programmes (smart contracts), des NFT et des milliers d'autres cryptos. Sa monnaie s'appelle l'ether.",
+  tether: "Un stablecoin : il est fait pour valoir 1 dollar. Son prix en euros bouge seulement avec le taux euro / dollar.",
+  'usd-coin': "Un stablecoin émis par l'entreprise Circle, fait pour valoir 1 dollar.",
+  binancecoin: "La crypto de Binance, la plus grande plateforme d'échange au monde. Elle sert surtout à payer moins de frais chez Binance.",
+  ripple: "XRP a été pensé pour envoyer de l'argent entre banques très vite. L'entreprise Ripple en détient une grosse partie.",
+  solana: "Une blockchain lancée en 2020, très rapide et avec peu de frais. Elle a connu plusieurs pannes à ses débuts.",
+  dogecoin: "Créé en 2013 comme une blague, avec le chien Shiba pour mascotte. Il n'a pas de limite : de nouveaux dogecoins sont créés chaque année.",
+  cardano: "Une blockchain lancée en 2017, développée avec une méthode très proche de la recherche scientifique.",
+  tron: "Une blockchain très utilisée pour envoyer des stablecoins (USDT) avec peu de frais.",
+  'shiba-inu': "Un memecoin inspiré de Dogecoin. Il existe des centaines de milliers de milliards de pièces, d'où son prix minuscule.",
+  litecoin: "Lancé en 2011, c'est une version modifiée du Bitcoin, avec des transactions plus rapides.",
+  chainlink: "Il apporte des informations du monde réel (prix, météo…) aux blockchains. On appelle ça un oracle.",
+  'bitcoin-cash': "Né en 2017 d'un désaccord dans la communauté Bitcoin : une partie a créé sa propre version.",
+  polkadot: "Un projet qui veut faire communiquer plusieurs blockchains entre elles.",
+  'avalanche-2': "Une blockchain rapide qui permet de créer ses propres sous-réseaux.",
+  stellar: "Pensé pour envoyer de l'argent entre pays à très faible coût.",
+  monero: "Une crypto conçue pour cacher qui envoie quoi à qui. Plusieurs plateformes l'ont retirée pour cette raison."
+};
+function isStable(c){ return /^(tether|usd-coin|dai|usds|ethena-usde|first-digital-usd|paypal-usd|true-usd|usd1-wlfi)$/.test(c.id) || /usd/i.test(c.symbol || ''); }
+function capFmt(v){
+  if (v >= 1e9) return (v / 1e9).toLocaleString('fr-FR', {maximumFractionDigits: v >= 1e11 ? 0 : 1}) + ' milliards €';
+  return (v / 1e6).toLocaleString('fr-FR', {maximumFractionDigits: 0}) + ' millions €';
+}
+function insightHtml(c){
+  const out = [], a = c.spark || [];
+  const fact = FACTS[c.id] || (isStable(c) ? "Un stablecoin : il est fait pour garder une valeur fixe, en général 1 dollar." : '');
+  if (fact) out.push(esc(fact));
+  if (a.length > 2) {
+    const mn = Math.min(...a), mx = Math.max(...a), r = a[a.length - 1] / a[0];
+    out.push(`Sur 7 jours, l'écart entre le prix le plus bas et le plus haut est de <b class="m">${((mx / mn - 1) * 100).toFixed(1).replace('.', ',')} %</b>. C'est ce qu'on appelle la volatilité.`);
+    out.push(`100 € placés il y a 7 jours vaudraient environ <b class="m ${cls(r - 1)}">${eur(100 * r)}</b> aujourd'hui.`);
+  }
+  if (c.cap) out.push(`Capitalisation : <b class="m">${capFmt(c.cap)}</b>. C'est elle qui mesure la taille réelle d'une crypto, pas son prix.`);
+  return out.length ? `<div class="box learn" style="margin:4px 0 14px"><span class="lab">À savoir</span>${out.map(t => `<p>${t}</p>`).join('')}</div>` : '';
+}
+function preview(){
+  const el = $('#prev'), c = coin(openId); if (!el || !c) return;
+  const v = parseFloat(($('#amt') || {}).value), pos = S.pos[c.id];
+  if (!(v > 0)) { el.textContent = 'Disponible : ' + eur(S.cash) + ' · frais 0,2 % par opération'; return; }
+  let h = `Si tu achètes : tu reçois environ <b class="m">${qtyFmt(v * (1 - FEE) / c.current_price)} ${esc(c.symbol.toUpperCase())}</b>, dont <b class="m">${eur(v * FEE)}</b> de frais.`;
+  if (pos) h += ` Si tu vends : tu touches environ <b class="m">${eur(Math.min(v, pos.qty * c.current_price) * (1 - FEE))}</b>.`;
+  if (v > S.cash) h += ` <span class="down">Il te manque ${eur(v - S.cash)} pour acheter.</span>`;
+  el.innerHTML = h;
+}
+document.addEventListener('input', e => { if (e.target.id === 'amt') preview(); });
+
+/* ================== ACCUEIL ================== */
+function introHtml(){
+  if (S.introDone) return '';
+  return `<div class="box"><span class="lab">Bienvenue</span>
+    <p style="font-size:17px;font-weight:900;margin:6px 0 10px">Apprends la crypto sans risquer un centime.</p>
+    <div class="perk"><b>1</b><span>Tu reçois <b style="font-family:inherit;color:var(--ink)">10 000 € fictifs</b>.</span></div>
+    <div class="perk"><b>2</b><span>Tu achètes et revends des cryptos aux <b style="font-family:inherit;color:var(--ink)">vrais prix</b>, en direct.</span></div>
+    <div class="perk"><b>3</b><span>Dans l'onglet <b style="font-family:inherit;color:var(--ink)">École</b> : 18 leçons, des quiz et des missions pour comprendre ce que tu fais.</span></div>
+    <button class="btn gold" id="introOk" style="margin-top:10px">C'est parti</button></div>`;
+}
+
+/* ================== FICHE D'UNE CRYPTO ================== */
+let openId = null, chartMode = '7j';
+function openSheet(id){
+  const c = coin(id); if (!c) return toast('Prix indisponible.');
+  openId = id; chartMode = '7j'; $('#sheet').classList.add('on'); drawSheet();
+}
+function closeSheet(){ openId = null; $('#sheet').classList.remove('on'); }
+function ownHtml(c){
+  const pos = S.pos[c.id];
+  if (!pos) return `<div class="kv"><span class="lab">Tu possèdes</span><b>0</b></div><div class="kv"><span class="lab">Tes euros</span><b>${eur(S.cash)}</b></div>`;
+  const v = pos.qty * c.current_price, g = v - pos.cost;
+  return `<div class="kv"><span class="lab">Tu possèdes</span><b>${qtyFmt(pos.qty)} ${esc(c.symbol.toUpperCase())}</b></div>
+    <div class="kv"><span class="lab">Valeur · gain</span><b>${eur(v)} <span class="${cls(g)}" style="font-size:12px">${sgn(g)}</span></b></div>`;
+}
+function drawSheet(){
+  const c = coin(openId); if (!c) return closeSheet();
+  const pos = S.pos[c.id];
+  $('#sheetIn').innerHTML = `
+    <div class="top">${icon(c)}<h3>${esc(c.name)} <span class="lab">${esc(c.symbol)}</span></h3><button class="x" id="close" aria-label="Fermer">✕</button></div>
+    <div class="big" id="sP">${eur(c.current_price)}</div>
+    <div class="m ${cls(c.ch)}" id="sC" style="font-size:14px">${pct(c.ch)} sur 24 h</div>
+    <canvas id="chart"></canvas>
+    <div class="seg" style="width:max-content;margin-bottom:14px"><button data-cm="7j" class="${chartMode === '7j' ? 'on' : ''}">7 jours</button><button data-cm="live" class="${chartMode === 'live' ? 'on' : ''}">En direct</button></div>
+    ${insightHtml(c)}
+    <div class="g2" id="sOwn" style="margin-bottom:12px">${ownHtml(c)}</div>
+    <input type="number" id="amt" inputmode="decimal" min="0" placeholder="Montant en euros">
+    <div class="chips"><button data-amt="100">100 €</button><button data-amt="500">500 €</button><button data-amt="1000">1 000 €</button><button data-amt="max">Tout</button></div>
+    <div class="g2">
+      <button class="btn buy" id="bBuy">Acheter</button>
+      <button class="btn sell" id="bSell" ${pos ? '' : 'disabled'}>Vendre</button>
+    </div>
+    ${pos ? '<button class="btn ghost" id="bAll" style="margin-top:8px">Tout vendre</button>' : ''}
+    <p class="note" id="prev" style="line-height:1.5"></p>
+    <h2 style="margin-left:0">Alerte de prix</h2>
+    <div style="display:flex;gap:8px">
+      <input type="number" id="alp" inputmode="decimal" min="0" placeholder="Prix en €, ex : ${Math.round(c.current_price * 1.05 * 100) / 100}">
+      <button class="btn ghost" id="bAl" style="width:auto;padding:0 18px">Créer</button>
+    </div>
+    ${!CLOUD ? '' : isPro() ? '<label class="chk" style="margin-top:10px"><input type="checkbox" id="alMail" checked> Me prévenir aussi par e-mail</label>'
+      : `<p class="note" style="margin-top:10px">Recevoir l'alerte par e-mail, même site fermé : <button class="lnk" data-go="account" style="padding:0">CryptoSim Pro</button></p>`}`;
+  drawChart(c); preview();
+}
+function sheetLive(doFlash){
+  const c = coin(openId); if (!c || !$('#sP')) return;
+  $('#sP').textContent = eur(c.current_price); if (doFlash) flash($('#sP'), c.dir);
+  $('#sC').textContent = pct(c.ch) + ' sur 24 h'; $('#sC').className = 'm ' + cls(c.ch);
+  $('#sOwn').innerHTML = ownHtml(c);
+  if (chartMode === 'live') drawChart(c);
+}
+function drawChart(c){
+  const cv = $('#chart'); if (!cv || !c) return;
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w * dpr; cv.height = h * dpr;
+  const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  const a = chartMode === 'live' ? c.live : (c.spark || []);
+  g.font = '12px IBM Plex Mono, monospace';
+  if (a.length < 2) { g.fillStyle = '#89958c'; g.fillText(chartMode === 'live' ? 'En attente des prochains prix en direct…' : 'Graphique indisponible', 4, h / 2); return; }
+  const mn = Math.min(...a), mx = Math.max(...a), r = (mx - mn) || mx * 0.001 || 1, up = a[a.length - 1] >= a[0];
+  const X = i => i * (w - 6) / (a.length - 1), Y = v => 10 + (1 - (v - mn) / r) * (h - 20);
+  g.strokeStyle = '#26312b'; g.lineWidth = 1;
+  for (let k = 0; k <= 3; k++) { const y = 10 + k * (h - 20) / 3; g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+  g.beginPath(); a.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)));
+  g.strokeStyle = up ? '#4fd68a' : '#ff6a55'; g.lineWidth = 1.8; g.lineJoin = 'round'; g.stroke();
+  g.fillStyle = g.strokeStyle; g.beginPath(); g.arc(X(a.length - 1), Y(a[a.length - 1]), 3.2, 0, 7); g.fill();
+}
+
+/* ================== COMPTE : CONNEXION, ABONNEMENT ================== */
+let accMsgState = null;
+function siteUrl(){ return location.origin + location.pathname; }
+function frErr(e){
+  const m = String((e && e.message) || e || '');
+  if (/invalid login credentials/i.test(m)) return 'E-mail ou mot de passe incorrect.';
+  if (/email not confirmed/i.test(m)) return "Confirme d'abord ton e-mail : clique sur le lien reçu (regarde aussi les spams).";
+  if (/already registered|already exists/i.test(m)) return 'Un compte existe déjà avec cet e-mail.';
+  if (/rate limit|too many|security purposes/i.test(m)) return 'Trop de tentatives. Attends une minute et réessaie.';
+  if (/password/i.test(m) && /(weak|short|least|characters)/i.test(m)) return 'Mot de passe trop faible : au moins 8 caractères, mélange lettres et chiffres.';
+  if (/failed to fetch|network/i.test(m)) return 'Pas de connexion au serveur. Vérifie Internet.';
+  return 'Erreur : ' + m;
+}
+function accMsg(txt, good){
+  accMsgState = {txt, good};
+  const el = $('#acMsg'); if (el) { el.textContent = txt; el.className = good ? 'good' : 'bad'; }
+}
+function initCloud(){
+  if (!CLOUD) return;
+  const s = document.createElement('script');
+  s.src = SB_LIB;
+  s.onload = () => {
+    try { sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey); } catch(e) { sbFail = true; return renderAccount(); }
+    sb.auth.onAuthStateChange((ev, session) => {
+      if (ev === 'PASSWORD_RECOVERY') { recovery = true; setTimeout(() => showTab('account'), 0); }
+      const u = (session && session.user) || null;
+      if ((u && u.id) !== (user && user.id)) { user = u; setTimeout(onUser, 0); }
+      else { user = u; setTimeout(renderAccount, 0); }
+    });
+    renderAccount();
+  };
+  s.onerror = () => { sbFail = true; renderAccount(); };
+  document.head.appendChild(s);
+}
+async function onUser(){
+  prof = null; cloudAlerts = null; delArmed = false; accMsgState = null;
+  if (!user) { renderAll(); return; }
+  renderAll();
+  await loadProfile(true);
+  await loadCloudAlerts();
+  const old = S.alerts.filter(a => !a.done);            // alertes faites avant de se connecter -> sur le compte
+  if (old.length && cloudAlerts) {
+    for (const a of old) {
+      const c = coin(a.id); if (!c) continue;
+      const {data, error} = await sb.from('alerts').insert({coin_id: a.id, symbol: c.symbol, name: c.name, dir: a.dir, target: a.target, email: false}).select().single();
+      if (!error && data) cloudAlerts.push(fromRow(data));
+    }
+    S.alerts = []; save();
+  }
+  if (/[?&]pro=ok/.test(location.search)) {
+    history.replaceState(null, '', siteUrl());
+    toast('Merci ! Ton abonnement Pro s\'active…');
+    for (let i = 0; i < 8 && !isPro(); i++) { await new Promise(r => setTimeout(r, 4000)); await loadProfile(false); }
+    toast(isPro() ? 'CryptoSim Pro est activé.' : "Le paiement est en cours de validation, ça peut prendre quelques minutes.");
+  }
+  renderAll();
+}
+async function loadProfile(merge){
+  if (!user) return;
+  const {data, error} = await sb.from('profiles').select('state,premium_until,updated_at').eq('id', user.id).maybeSingle();
+  if (error || !data) return;
+  const wasPro = isPro();
+  prof = data;
+  if (merge) {
+    const r = data.state;
+    const blank = !S.hist.length && !Object.keys(S.lessons).length && !S.bonus;   // rien joué sur cet appareil
+    if (r && typeof r.cash === 'number' && (blank || (r.u || 0) > (S.u || 0))) {
+      S = Object.assign(fresh(), r, {alerts: []});
+      try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+      toast('Partie récupérée depuis ton compte');
+    } else cloudSave(true);
+  }
+  if (wasPro !== isPro()) renderAll();
+}
+async function loadCloudAlerts(){
+  if (!user) return;
+  const {data, error} = await sb.from('alerts').select('id,coin_id,dir,target,email,done').order('created_at');
+  if (!error && data) { cloudAlerts = data.map(fromRow); renderAlerts(); }
+}
+function cloudSave(now){
+  if (!user || !sb) return;
+  clearTimeout(cloudT);
+  cloudT = setTimeout(() => {
+    sb.from('profiles').update({state: Object.assign({}, S, {alerts: []}), updated_at: new Date().toISOString()}).eq('id', user.id)
+      .then(r => { if (r && r.error) console.warn('sauvegarde compte', r.error.message); });
+  }, now ? 0 : 2500);
+}
+async function submitAccount(){
+  if (!sb) return;
+  const em = ($('#acEmail') || {}).value, pw = ($('#acPass') || {}).value || '';
+  const btn = $('#acGo'); if (btn) btn.disabled = true;
+  let r;
+  try {
+    if (recovery) {
+      if (pw.length < 8) return accMsg('Le mot de passe doit faire au moins 8 caractères.');
+      r = await sb.auth.updateUser({password: pw});
+      if (r.error) return accMsg(frErr(r.error));
+      recovery = false; accMsgState = null; toast('Mot de passe changé.'); return renderAccount();
+    }
+    const email = String(em || '').trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return accMsg('Cet e-mail ne semble pas valide.');
+    if (authMode !== 'forgot' && pw.length < 8) return accMsg('Le mot de passe doit faire au moins 8 caractères.');
+    if (authMode === 'signup' && !($('#acOk') || {}).checked) return accMsg('Coche la case pour accepter les conditions.');
+    if (authMode === 'login') r = await sb.auth.signInWithPassword({email, password: pw});
+    else if (authMode === 'signup') r = await sb.auth.signUp({email, password: pw, options: {emailRedirectTo: siteUrl()}});
+    else r = await sb.auth.resetPasswordForEmail(email, {redirectTo: siteUrl()});
+    if (r.error) return accMsg(frErr(r.error));
+    if (authMode === 'signup' && !(r.data && r.data.session)) accMsg("Compte créé. Clique sur le lien qu'on vient de t'envoyer par e-mail pour l'activer (regarde aussi les spams).", true);
+    else if (authMode === 'forgot') accMsg('Si un compte existe avec cet e-mail, tu vas recevoir un lien pour choisir un nouveau mot de passe.', true);
+  } catch(e) { accMsg(frErr(e)); }
+  finally { const b = $('#acGo'); if (b) b.disabled = false; }
+}
+async function accountClick(t){
+  const mode = t.closest('[data-am]');
+  if (mode) { authMode = mode.dataset.am; accMsgState = null; return renderAccount(); }
+  if (t.id === 'acOut') { await sb.auth.signOut(); toast('Déconnecté.'); return; }
+  if (t.id === 'acDel') {
+    if (!delArmed) { delArmed = true; renderAccount(); setTimeout(() => { delArmed = false; }, 6000); return; }
+    t.disabled = true;
+    const {error} = await sb.functions.invoke('delete-account', {method: 'POST'});
+    if (error) { t.disabled = false; return toast('Suppression impossible pour le moment. Réessaie plus tard.'); }
+    await sb.auth.signOut();
+    S = fresh(); S.btc0 = price('bitcoin'); save(); renderAll();
+    toast('Ton compte et toutes ses données ont été supprimés.');
+  }
+}
+function proLink(){
+  try {
+    const u = new URL(CFG.stripeLink);
+    u.searchParams.set('client_reference_id', user.id);
+    u.searchParams.set('prefilled_email', user.email || '');
+    return u.toString();
+  } catch(e) { return ''; }
+}
+function portalLink(){
+  try { const u = new URL(CFG.stripePortal); u.searchParams.set('prefilled_email', user.email || ''); return u.toString(); } catch(e) { return ''; }
+}
+function perks(){
+  return `<div class="perk"><b>→</b><span>Alertes de prix <b style="font-family:inherit;color:var(--ink)">par e-mail</b>, même quand le site est fermé</span></div>
+    <div class="perk"><b>→</b><span>Jusqu'à ${CFG.proAlerts || 30} alertes en même temps (${CFG.freeAlerts || 5} en gratuit)</span></div>
+    <div class="perk"><b>→</b><span>Le badge Pro à côté du logo</span></div>
+    <div class="perk"><b>→</b><span>Sans engagement : tu résilies quand tu veux, en un clic</span></div>`;
+}
+function renderAccount(){
+  const P = $('#p-account');
+  const keep = {e: ($('#acEmail') || {}).value, p: ($('#acPass') || {}).value, ok: ($('#acOk') || {}).checked};
+  $('#proTag').style.display = isPro() ? 'inline-block' : 'none';
+  let h = '';
+  if (!CLOUD) {
+    h = `<h2 style="margin-top:4px">Compte</h2><div class="box less"><p>Les comptes arrivent bientôt : sauvegarde de ta partie sur tous tes appareils et alertes par e-mail avec CryptoSim Pro.</p>
+      <p style="margin:0">En attendant, ta partie est enregistrée dans ce navigateur.</p></div>`;
+  } else if (sbFail) {
+    h = `<h2 style="margin-top:4px">Compte</h2><div class="box empty">Impossible de joindre le serveur des comptes.<br>Vérifie ta connexion et recharge la page.</div>`;
+  } else if (!sb) {
+    h = `<div class="box empty">Chargement…</div>`;
+  } else if (recovery) {
+    h = `<h2 style="margin-top:4px">Nouveau mot de passe</h2><form class="box" id="acForm" onsubmit="return false">
+      <input class="fld" id="acPass" type="password" autocomplete="new-password" placeholder="Nouveau mot de passe (8 caractères min.)">
+      <button class="btn gold" id="acGo" type="submit">Enregistrer</button><div id="acMsg"></div></form>`;
+  } else if (!user) {
+    const sign = authMode === 'signup', forgot = authMode === 'forgot';
+    h = `<h2 style="margin-top:4px">${forgot ? 'Mot de passe oublié' : sign ? 'Créer un compte' : 'Connexion'}</h2>
+      <form class="box" id="acForm" onsubmit="return false">
+        ${forgot ? '' : `<div class="seg" style="margin-bottom:12px"><button type="button" data-am="login" class="${sign ? '' : 'on'}" style="flex:1">Connexion</button><button type="button" data-am="signup" class="${sign ? 'on' : ''}" style="flex:1">Créer un compte</button></div>`}
+        <input class="fld" id="acEmail" type="email" autocomplete="email" inputmode="email" placeholder="Ton e-mail">
+        ${forgot ? '' : `<input class="fld" id="acPass" type="password" autocomplete="${sign ? 'new-password' : 'current-password'}" placeholder="${sign ? 'Choisis un mot de passe (8 caractères min.)' : 'Mot de passe'}">`}
+        ${sign ? `<label class="chk"><input type="checkbox" id="acOk"> <span>J'accepte les <a href="legal.html" target="_blank">conditions et la politique de confidentialité</a>. Si j'ai moins de 15 ans, un parent est d'accord.</span></label>` : ''}
+        <button class="btn gold" id="acGo" type="submit">${forgot ? 'Recevoir le lien' : sign ? 'Créer mon compte' : 'Me connecter'}</button>
+        ${forgot ? '<button type="button" class="lnk" data-am="login">Retour à la connexion</button>' : sign ? '' : '<button type="button" class="lnk" data-am="forgot">Mot de passe oublié ?</button>'}
+        <div id="acMsg"></div>
+      </form>
+      <h2>Avec un compte</h2><div class="box">
+        <div class="perk"><b>→</b><span>Ta partie est sauvegardée : retrouve-la sur ton téléphone et ton ordi</span></div>
+        <div class="perk"><b>→</b><span>Tes alertes te suivent partout</span></div>
+        <div class="perk"><b>→</b><span>Gratuit. Et si tu veux plus : CryptoSim Pro à ${esc(CFG.proPrice || '2,99 €').replace(/ /g, '&nbsp;')}/mois</span></div></div>`;
+  } else {
+    const pro = isPro(), until = pro ? new Date(prof.premium_until).toLocaleDateString('fr-FR') : '';
+    h = `<h2 style="margin-top:4px">Mon compte</h2><div class="box">
+        <span class="lab">Connecté avec</span><div style="font-weight:700;margin:3px 0 6px;word-break:break-all">${esc(user.email || '')}</div>
+        <div class="note" style="margin:0">Ta partie est sauvegardée sur ton compte.</div></div>`;
+    if (pro) h += `<h2>Abonnement</h2><div class="box"><span class="tag">Pro actif</span>
+        <p style="margin:10px 0 12px;line-height:1.45">Ton abonnement est actif jusqu'au <b>${until}</b> et se renouvelle tout seul chaque mois.</p>
+        ${portalLink() ? `<a class="btn ghost" style="display:block;text-align:center;text-decoration:none" href="${esc(portalLink())}">Gérer ou résilier</a>` : ''}</div>`;
+    else h += `<h2>CryptoSim Pro</h2><div class="box">
+        <div class="price">${esc(CFG.proPrice || '2,99 €')}<small> / mois</small></div>
+        <div style="margin:10px 0 12px">${perks()}</div>
+        ${proLink() ? `<a class="btn gold" style="display:block;text-align:center;text-decoration:none" href="${esc(proLink())}">Passer Pro</a>
+          <p class="note">Paiement sécurisé par Stripe. Le Pro ne donne pas de vrai argent : CryptoSim reste un simulateur.</p>`
+          : '<p class="note">Bientôt disponible.</p>'}</div>`;
+    h += `<button class="btn ghost" id="acOut" style="margin-top:6px">Se déconnecter</button>
+      <button class="btn sell" id="acDel" style="margin-top:8px">${delArmed ? 'Touche encore : tout sera effacé' : 'Supprimer mon compte'}</button>
+      <p class="note">La suppression efface ton compte, ta partie et tes alertes, et résilie ton abonnement.</p>`;
+  }
+  P.innerHTML = h;
+  if ($('#acEmail') && keep.e) $('#acEmail').value = keep.e;
+  if ($('#acPass') && keep.p) $('#acPass').value = keep.p;
+  if ($('#acOk') && keep.ok) $('#acOk').checked = true;
+  if (accMsgState) accMsg(accMsgState.txt, accMsgState.good);
+}
+document.addEventListener('submit', e => { if (e.target.id === 'acForm') { e.preventDefault(); submitAccount(); } });
+
+/* ================== AFFICHAGE GÉNÉRAL ================== */
+function renderAll(){
+  renderTotal(); renderMarket(); renderWallet(); renderAlerts(); renderLearn(); renderAccount();
+  if (openId) sheetLive(false);
+}
+function showTab(t){
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === 'p-' + t));
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  if (t === 'wallet') renderWallet();
+  $('main').scrollTop = 0;
+}
+
+/* ================== CLICS ================== */
+document.addEventListener('click', e => {
+  const t = e.target;
+  const tab = t.closest('nav button'); if (tab) return showTab(tab.dataset.tab);
+  if (t.id === 'sheet' || t.id === 'close') return closeSheet();
+  const so = t.closest('[data-sort]');
+  if (so) { view.sort = so.dataset.sort; document.querySelectorAll('#sort button').forEach(b => b.classList.toggle('on', b === so)); return renderMarket(); }
+  const cm = t.closest('[data-cm]');
+  if (cm) { chartMode = cm.dataset.cm; document.querySelectorAll('[data-cm]').forEach(b => b.classList.toggle('on', b === cm)); return drawChart(coin(openId)); }
+  const del = t.closest('[data-del]');
+  if (del) return deleteAlert(del.dataset.del);
+  const go = t.closest('[data-go]'); if (go) { closeSheet(); return showTab(go.dataset.go); }
+  if (t.closest('#p-account')) return accountClick(t);
+  const ans = t.closest('.ans'); if (ans) return answer(ans);
+  if (t.id === 'qzGo') return startQuiz();
+  if (t.id === 'qzNext') return quizNext();
+  const vf = t.closest('[data-vf]'); if (vf) return quizAnswer(vf.dataset.vf === '1');
+  if (t.id === 'reset') {
+    if (resetArmed) { resetArmed = false; S = fresh(); S.btc0 = price('bitcoin'); save(); renderAll(); toast('Nouveau départ : ' + eur(START_CASH)); }
+    else { resetArmed = true; renderWallet(); setTimeout(() => { resetArmed = false; }, 5000); }
+    return;
+  }
+  const chip = t.closest('[data-amt]');
+  if (chip) { $('#amt').value = chip.dataset.amt === 'max' ? Math.floor(S.cash * 100) / 100 : chip.dataset.amt; return preview(); }
+  if (t.id === 'introOk') { S.introDone = 1; save(); return renderMarket(); }
+  if (openId && /^b(Buy|Sell|All|Al)$/.test(t.id)) {
+    const amt = parseFloat($('#amt').value);
+    if (t.id === 'bAl') {
+      addAlert(openId, parseFloat($('#alp').value), $('#alMail') && $('#alMail').checked).then(ok => { if (ok) { if ($('#alp')) $('#alp').value = ''; renderAlerts(); } });
+      return;
+    }
+    const ok = t.id === 'bBuy' ? buy(openId, amt) : t.id === 'bSell' ? sell(openId, amt, false) : sell(openId, 0, true);
+    if (ok) { renderAll(); drawSheet(); }
+    return;
+  }
+  const row = t.closest('[data-coin]'); if (row) openSheet(row.dataset.coin);
+});
+$('#q').addEventListener('input', e => { view.q = e.target.value; renderMarket(); });
+window.addEventListener('resize', () => { if (openId) drawChart(coin(openId)); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - lastUpd > REFRESH_MS) loadMarket(); });
+
+/* ================== DÉMARRAGE ================== */
+coins.forEach(c => { const k = c.symbol.toUpperCase() + 'USDT'; if (!bySym[k]) bySym[k] = c; });
+renderAll();
+initCloud();
+loadMarket().then(connectLive);
+setInterval(() => { if (!document.hidden) { loadMarket(); checkMissions(); if (user) { loadCloudAlerts(); loadProfile(false); } } }, REFRESH_MS);
+setInterval(tick, 1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "CryptoSim – Simulateur de crypto",
+  "short_name": "CryptoSim",
+  "description": "Simulateur de crypto avec argent fictif et vrais prix.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
