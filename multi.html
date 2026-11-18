@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1512">
+<title>IA multi-crypto – CryptoSim</title>
+<meta name="description" content="Une petite IA reçoit 100 € fictifs et achète, vend ou attend sur 12 cryptos en même temps, en direct. Un juge honnête la compare au hasard.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1512;--panel:#151d19;--panel2:#1b2520;--line:#26312b;--ink:#efe9da;--mut:#89958c;--acc:#ffd23f;--up:#4fd68a;--down:#ff6a55;--blue:#6fb6ff;
+  --sans:"Archivo","Segoe UI",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+.wrap{max-width:1280px;margin:0 auto;padding:16px 16px 50px}
+a{color:var(--acc)}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.logo{font-weight:900;font-size:22px;letter-spacing:-.03em;text-transform:uppercase}.logo i{font-style:normal;color:var(--acc)}
+.back{font-size:14px;text-decoration:none;border:1px solid var(--line);padding:7px 11px;border-radius:6px;color:var(--ink)}
+.lab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.m{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.down{color:var(--down)}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:14px}
+h2{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+.grid{display:grid;gap:14px}
+@media(min-width:1000px){.grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+button{font-family:inherit}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:9px 13px;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;cursor:pointer}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-right:1px solid var(--line);background:var(--panel);color:var(--mut);padding:9px 11px;font-size:12px;font-weight:700;cursor:pointer}
+.seg button:last-child{border-right:0}.seg button.on{background:var(--acc);color:#111}
+canvas{width:100%;display:block}
+#cEq{height:190px}#cFit{height:150px}
+.big{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.big b{font-family:var(--mono);font-size:34px;font-weight:600;letter-spacing:-.02em}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px;margin-top:10px}
+@media(min-width:640px){.stats.s4{grid-template-columns:repeat(4,1fr)}}
+.stats b{display:block;font-family:var(--mono);font-size:17px;font-weight:600;margin-top:2px}
+.verdict{border-left:3px solid var(--acc);padding:4px 0 4px 11px;margin-top:12px;font-size:14.5px;line-height:1.5}
+.verdict.good{border-color:var(--up)}.verdict.bad{border-color:var(--down)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:6px}
+.legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px}
+.tbl th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);font-weight:400;padding:0 6px 7px}
+.tbl td{padding:8px 6px;border-top:1px solid var(--line);vertical-align:middle}
+.tbl td:first-child,.tbl th:first-child{padding-left:0}.tbl td:last-child,.tbl th:last-child{padding-right:0;text-align:right}
+.tbl .r{text-align:right}
+.tbl small{display:block;color:var(--mut);font-size:11px}
+.tbl tr.held td{background:rgba(255,210,63,.05)}
+.tag{font-weight:900;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+@media(max-width:520px){.tbl .hide{display:none}.tbl{font-size:12.5px}}
+.log{font-family:var(--mono);font-size:12px;max-height:230px;overflow-y:auto;border-top:1px solid var(--line);margin-top:10px}
+.log div{padding:6px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+p.t{font-size:14.5px;line-height:1.55;color:#cfc9bb;margin:0 0 10px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mut);margin-right:6px}.dot.on{background:var(--up);animation:b 1.4s infinite}
+@keyframes b{50%{opacity:.25}}
+</style>
+</head>
+<body><div class="wrap">
+<header>
+  <a class="back" href="./">← CryptoSim</a>
+  <a class="back" href="ia.html">Labo IA (1 crypto)</a>
+  <div class="logo">IA <i>multi-crypto</i></div>
+  <span class="lab" id="status">Chargement des prix…</span>
+</header>
+
+<div class="tools">
+  <span class="lab">Entraînement</span>
+  <div class="seg" id="speed"><button data-s="0">Pause</button><button data-s="1">Lent</button><button data-s="2" class="on">Normal</button><button data-s="3">Turbo</button></div>
+  <button class="btn" id="reset">Tout recommencer</button>
+</div>
+
+<div class="grid">
+  <div>
+    <div class="box">
+      <h2><span class="dot" id="liveDot"></span>Son compte · 100 € fictifs au départ</h2>
+      <div class="big"><b id="val">100,00 €</b><span class="m" id="valPct"></span></div>
+      <canvas id="cEq"></canvas>
+      <div class="stats s4">
+        <div><span class="lab">En euros</span><b id="cash">100,00 €</b></div>
+        <div><span class="lab">Cryptos tenues</span><b id="nHeld">0 / 4</b></div>
+        <div><span class="lab">Opérations</span><b id="nOps">0</b></div>
+        <div><span class="lab">Décisions dans</span><b id="next">—</b></div>
+      </div>
+    </div>
+    <div class="box">
+      <h2>Ce qu'elle pense de chaque crypto</h2>
+      <table class="tbl">
+        <thead><tr><th>Crypto</th><th class="r">Prix</th><th class="r hide">1 min</th><th>Son choix</th><th>Elle a</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="box">
+      <h2>Ses opérations</h2>
+      <div class="log" id="log" style="border-top:0;margin-top:0"></div>
+    </div>
+  </div>
+  <div>
+    <div class="box">
+      <h2>Le vrai juge</h2>
+      <p class="t" style="font-size:13.5px">Seules comptent ses décisions en direct. On compare son compte avec un panier des 12 cryptos gardé sans rien faire, et avec 300 robots qui achètent et vendent au hasard, aussi souvent qu'elle.</p>
+      <div class="stats">
+        <div><span class="lab">Minutes en direct</span><b id="jN">0</b></div>
+        <div><span class="lab">Avec l'IA</span><b id="jIa">100,00 €</b></div>
+        <div><span class="lab">Panier sans rien faire</span><b id="jHold">—</b></div>
+        <div><span class="lab">Robots au hasard battus</span><b id="jRand">—</b></div>
+      </div>
+      <div class="verdict" id="jVerdict">Le juge attend les premières minutes en direct.</div>
+    </div>
+    <div class="box">
+      <h2>Elle apprend</h2>
+      <canvas id="cFit"></canvas>
+      <div class="legend"><span style="--c:var(--acc)">Entraînement</span><span style="--c:var(--blue)">Examen (minutes jamais vues)</span><span style="--c:var(--mut)">Garder sans rien faire</span></div>
+      <div class="stats">
+        <div><span class="lab">Génération</span><b id="sGen">0</b></div>
+        <div><span class="lab">Examen</span><b id="sTest">—</b></div>
+      </div>
+    </div>
+    <div class="box">
+      <h2>Comment elle joue</h2>
+      <p class="t"><b>Un seul cerveau pour toutes les cryptos.</b> Chaque minute, il regarde les 12 cryptos une par une : les 10 dernières variations, l'écart avec la moyenne, l'agitation, la tendance sur 30 minutes, si elle en possède déjà et <b>combien elle gagne ou perd depuis son achat</b>. Pour chacune il choisit : vendre, attendre ou acheter.</p>
+      <p class="t"><b>Elle vend d'abord, puis réinvestit.</b> Elle peut tenir jusqu'à 4 cryptos à la fois, avec un quart du compte chacune. Quand elle vend, l'argent récupéré repart sur les cryptos qu'elle a le plus envie d'acheter.</p>
+      <p class="t"><b>On l'oblige à jouer.</b> Pendant l'entraînement, un cerveau qui ne fait presque rien est puni. Sinon, avec les frais, elle découvre vite que la façon la plus sûre de ne pas perdre, c'est de ne jamais trader.</p>
+      <p class="t" style="margin:0"><b>Le piège : les frais.</b> Chaque achat et chaque vente coûte 0,2 %. Si elle bouge trop vite, les frais mangent le compte, même quand ses choix sont bons. Tout est fictif : c'est une expérience, pas un conseil.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Le cœur : réseau de neurones + simulation (page ET calcul en arrière-plan) -->
+<script id="core">
+'use strict';
+const NF = 13, NIN = 15, HID = 12, NOUT = 3;         // 13 infos + « possède ? » + « gain depuis l'achat »
+const FEE = 0.002, WIN = 30, TEST_PART = 0.3;
+const NW = NIN * HID + HID + HID * NOUT + NOUT;
+const xIn = new Float32Array(NIN), hOut = new Float32Array(HID), oOut = new Float32Array(NOUT);
+function clip(v){ return v > 3 ? 3 : v < -3 ? -3 : v; }
+function tanh(x){ if (x > 4.97) return 1; if (x < -4.97) return -1; const x2 = x * x; return x * (135135 + x2 * (17325 + x2 * (378 + x2))) / (135135 + x2 * (62370 + x2 * (3150 + x2 * 28))); }
+function features(c){
+  const n = c.length, F = new Float32Array(n * NF);
+  for (let t = WIN + 1; t < n; t++) {
+    const o = t * NF; let s = 0, s2 = 0;
+    for (let k = 0; k < 10; k++) F[o + k] = clip(Math.log(c[t - k] / c[t - k - 1]) * 2000);
+    for (let k = 0; k < WIN; k++) { s += c[t - k]; const r = Math.log(c[t - k] / c[t - k - 1]); s2 += r * r; }
+    F[o + 10] = clip((c[t] / (s / WIN) - 1) * 500);
+    F[o + 11] = clip(Math.sqrt(s2 / WIN) * 2000 - 1);
+    F[o + 12] = clip((c[t] / c[t - WIN] - 1) * 300);
+  }
+  return F;
+}
+function splitOf(n){ return Math.floor(n * (1 - TEST_PART)); }
+// 0 vendre, 1 attendre, 2 acheter. gain = log(prix / prix d'achat)
+function forward(w, F, t, pos, gain){
+  const o = t * NF;
+  for (let i = 0; i < NF; i++) xIn[i] = F[o + i];
+  xIn[NF] = pos ? 1 : -1; xIn[NF + 1] = pos ? clip(gain * 200) : 0;
+  let p = 0;
+  for (let h = 0; h < HID; h++) { let s = 0; for (let i = 0; i < NIN; i++) s += xIn[i] * w[p++]; hOut[h] = s; }
+  for (let h = 0; h < HID; h++) hOut[h] = tanh(hOut[h] + w[p++]);
+  for (let k = 0; k < NOUT; k++) { let s = 0; for (let h = 0; h < HID; h++) s += hOut[h] * w[p++]; oOut[k] = s; }
+  for (let k = 0; k < NOUT; k++) oOut[k] += w[p++];
+  return oOut[2] > oOut[1] ? (oOut[2] > oOut[0] ? 2 : 0) : (oOut[1] > oOut[0] ? 1 : 0);
+}
+// Une crypto, de la minute a à b, départ = 1
+let nTrades = 0;
+function play(w, c, F, a, b){
+  let cash = 1, coins = 0, buy = 0; nTrades = 0;
+  for (let t = Math.max(a, WIN + 1); t < b; t++) {
+    const act = forward(w, F, t, coins > 0, coins > 0 ? Math.log(c[t] / buy) : 0);
+    if (act === 2 && !coins) { coins = cash * (1 - FEE) / c[t]; cash = 0; buy = c[t]; nTrades++; }
+    else if (act === 0 && coins) { cash = coins * c[t] * (1 - FEE); coins = 0; nTrades++; }
+  }
+  return cash + coins * c[b - 1];
+}
+function gauss(){ let u = 0; while (!u) u = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random()); }
+function randomBrain(){ const w = new Float32Array(NW); for (let i = 0; i < NW; i++) w[i] = gauss() * 0.5; return w; }
+function mutate(w, rate, size){ for (let i = 0; i < NW; i++) if (Math.random() < rate) w[i] += gauss() * size; }
+</script>
+
+<!-- L'évolution en arrière-plan : chaque cerveau joue sur les 12 cryptos -->
+<script id="evo" type="text/plain">
+const POP = 60, ELITE = 6;
+let pop = [], gen = 0, speed = 2, timer = null, D = [];
+function setData(series){ D = series.map(c => ({c, F: features(c), sp: splitOf(c.length)})); }
+// Note = gain moyen sur les 12 cryptos. Rester sans rien faire est puni : on l'oblige à jouer.
+function train(w){ let s = 0, pen = 0; for (const d of D) { s += Math.log(play(w, d.c, d.F, WIN + 1, d.sp)); if (nTrades < 4) pen += 0.004 * (4 - nTrades); } return [s / D.length, pen / D.length]; }
+function exam(w){ let s = 0; for (const d of D) s += play(w, d.c, d.F, d.sp, d.c.length) - 1; return s / D.length; }
+function pick(){ let b = pop[(Math.random() * POP) | 0]; for (let k = 0; k < 2; k++) { const c = pop[(Math.random() * POP) | 0]; if (c.fit > b.fit) b = c; } return b; }
+function generation(){
+  for (const p of pop) { const [g, pen] = train(p.w); p.gain = g; p.fit = g - pen; }
+  pop.sort((a, b) => b.fit - a.fit);
+  const best = pop[0], test = exam(best.w);
+  const next = pop.slice(0, ELITE).map(p => ({w: p.w, fit: 0}));
+  while (next.length < POP) {
+    const a = pick().w, b = pick().w, w = new Float32Array(NW);
+    for (let i = 0; i < NW; i++) w[i] = Math.random() < 0.5 ? a[i] : b[i];
+    mutate(w, 0.1, 0.3);
+    if (Math.random() < 0.1) mutate(w, 0.05, 1.5);
+    next.push({w, fit: 0});
+  }
+  pop = next; gen++;
+  return [Math.exp(best.gain) - 1, test];
+}
+function tick(){
+  let h; const t0 = performance.now();
+  do h = generation(); while (speed === 3 && performance.now() - t0 < 300);
+  postMessage({gen, champ: pop[0].w, h});
+  schedule();
+}
+function schedule(){ clearTimeout(timer); if (speed && D.length) timer = setTimeout(tick, speed === 3 ? 0 : speed === 2 ? 100 : 700); }
+onmessage = e => {
+  const m = e.data;
+  if (m.series) setData(m.series);
+  if (m.type === 'init') {
+    gen = m.gen || 0; pop = [];
+    for (let i = 0; i < POP; i++) {
+      if (m.saved && i < POP / 2) { const w = Float32Array.from(m.saved); if (i) mutate(w, 0.15, 0.2); pop.push({w, fit: 0}); }
+      else pop.push({w: randomBrain(), fit: 0});
+    }
+  }
+  if ('speed' in m) speed = m.speed;
+  schedule();
+};
+</script>
+
+<script>
+'use strict';
+const API = 'https://data-api.binance.vision/api/v3', WSS = 'wss://data-stream.binance.vision/stream?streams=';
+const COINS = [['BTC', 'Bitcoin'], ['ETH', 'Ethereum'], ['BNB', 'BNB'], ['SOL', 'Solana'], ['XRP', 'XRP'], ['DOGE', 'Dogecoin'],
+  ['ADA', 'Cardano'], ['TRX', 'TRON'], ['AVAX', 'Avalanche'], ['LINK', 'Chainlink'], ['DOT', 'Polkadot'], ['LTC', 'Litecoin']];
+const START = 100, MAXPOS = 4, NC = 1000, MAXSNAP = 6000, ROBOTS = 300;
+const BRAIN_KEY = 'cs_ia_multi_v1', LIVE_KEY = 'cs_ia_multi_live_v1';
+const $ = s => document.querySelector(s);
+const eur = v => v.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: v < 1 ? 5 : 2}) + ' €';
+const pct = v => (v >= 0 ? '+' : '') + (v * 100).toFixed(2).replace('.', ',') + ' %';
+const LABEL = ['Vendre', 'Attendre', 'Acheter'], LCOL = ['down', '', 'up'];
+
+const S = COINS.map(([s, name]) => ({s, name, c: [], t: [], F: null, last: 0, pend: null, act: 1, pr: [0, 1, 0]}));
+let eurusd = 1.1, champ = randomBrain(), gen = 0, hist = [], speed = 2, ready = false, live, lastStep = 0;
+
+/* ============ CALCUL EN ARRIÈRE-PLAN ============ */
+const worker = new Worker(URL.createObjectURL(new Blob([$('#core').textContent, $('#evo').textContent], {type: 'text/javascript'})));
+worker.onmessage = e => {
+  const m = e.data;
+  gen = m.gen; champ = m.champ; hist.push(m.h); if (hist.length > 300) hist.shift();
+  if (gen % 10 === 0) saveBrain();
+};
+function saveBrain(){ try { localStorage.setItem(BRAIN_KEY, JSON.stringify({w: Array.from(champ), gen, hist: hist.slice(-300)})); } catch(e){} }
+
+/* ============ DONNÉES ============ */
+async function getJSON(u){ const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+async function loadHistory(){
+  try { eurusd = +(await getJSON(`${API}/ticker/price?symbol=EURUSDT`)).price || eurusd; } catch(e){}
+  await Promise.all(S.map(async d => {
+    const k = await getJSON(`${API}/klines?symbol=${d.s}USDT&interval=1m&limit=${NC}`);
+    k.pop();                                       // la dernière minute n'est pas finie
+    d.c = k.map(x => +x[4] / eurusd); d.t = k.map(x => x[0]);
+    d.F = features(d.c); d.last = d.c[d.c.length - 1];
+  }));
+  lastStep = Math.max(...S.map(d => d.t[d.t.length - 1]));
+}
+
+/* ============ EN DIRECT ============ */
+let ws = null;
+function connectLive(){
+  if (ws) { ws.onclose = null; ws.close(); }
+  ws = new WebSocket(WSS + S.map(d => d.s.toLowerCase() + 'usdt@kline_1m').join('/'));
+  ws.onmessage = ev => {
+    const k = (JSON.parse(ev.data).data || {}).k; if (!k) return;
+    const d = S.find(x => x.s + 'USDT' === k.s); if (!d) return;
+    d.last = +k.c / eurusd;
+    $('#liveDot').classList.add('on');
+    if (k.x && k.t > d.t[d.t.length - 1]) d.pend = {t: k.t, p: d.last};
+  };
+  ws.onclose = () => { $('#liveDot').classList.remove('on'); setTimeout(connectLive, 3000); };
+}
+// Chaque seconde : dès que toutes les cryptos ont fini la minute (ou 6 s après), elle décide
+function checkStep(){
+  const T = Math.max(0, ...S.map(d => d.pend ? d.pend.t : 0));
+  if (!T || T <= lastStep) return;
+  if (S.every(d => d.pend && d.pend.t === T) || Date.now() > T + 66000) step(T);
+}
+function prices(){ const p = {}; for (const d of S) p[d.s] = d.c[d.c.length - 1]; return p; }
+function value(p){ let v = live.cash; for (const k in live.h) v += live.h[k].q * (p[k] || 0); return v; }
+function step(T){
+  lastStep = T;
+  for (const d of S) {
+    const p = d.pend && d.pend.t === T ? d.pend.p : d.last;
+    d.c.push(p); d.t.push(T); d.pend = null;
+    if (d.c.length > NC + 600) { d.c.shift(); d.t.shift(); }
+    d.F = features(d.c);
+  }
+  worker.postMessage({series: S.map(d => d.c)});   // l'entraînement continue avec les nouveaux prix
+  const P = prices();
+  live.snaps.push(S.map(d => +P[d.s].toPrecision(6))); live.eq.push(value(P));   // pour le juge : avant ses décisions
+  // 1) elle regarde chaque crypto
+  for (const d of S) {
+    const h = live.h[d.s];
+    d.act = forward(champ, d.F, d.c.length - 1, !!h, h ? Math.log(P[d.s] / h.buy) : 0);
+    d.pr = softmax();
+  }
+  let ops = 0;
+  // 2) elle vend d'abord
+  for (const d of S) {
+    const h = live.h[d.s]; if (d.act !== 0 || !h) continue;
+    const got = h.q * P[d.s] * (1 - FEE);
+    live.cash += got; delete live.h[d.s]; ops++;
+    addLog('Vend', d.s, got, got / h.cost - 1);
+  }
+  // 3) puis réinvestit, en commençant par ce qu'elle a le plus envie d'acheter
+  const total = value(P), slot = total / MAXPOS;
+  for (const d of S.filter(d => d.act === 2 && !live.h[d.s]).sort((a, b) => b.pr[2] - a.pr[2])) {
+    if (Object.keys(live.h).length >= MAXPOS) break;
+    const amt = Math.min(live.cash, slot); if (amt < slot * 0.5) break;
+    live.cash -= amt; live.h[d.s] = {q: amt * (1 - FEE) / P[d.s], buy: P[d.s], cost: amt}; ops++;
+    addLog('Achète', d.s, amt, null);
+  }
+  live.trades += ops; live.tc.push(ops);
+  if (live.snaps.length > MAXSNAP) { live.snaps.shift(); live.eq.shift(); live.tc.shift(); }
+  saveLive(); renderJudge(); renderRows();
+}
+function softmax(){ const m = Math.max(...oOut), e = Array.from(oOut, v => Math.exp(v - m)), s = e.reduce((a, b) => a + b); return e.map(v => v / s); }
+function addLog(what, s, amount, gain){
+  live.log.unshift([new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'}), what, s, amount, gain]);
+  if (live.log.length > 80) live.log.pop();
+  renderLog();
+}
+function renderLog(){
+  $('#log').innerHTML = live.log.length ? live.log.map(([h, w, s, a, g]) =>
+    `<div><span>${h} · <b class="${w === 'Vend' ? 'down' : 'up'}">${w}</b> ${s}</span><span>${eur(a)}${g == null ? '' : ` <b class="${g >= 0 ? 'up' : 'down'}">${pct(g)}</b>`}</span></div>`).join('')
+    : '<div><span style="color:var(--mut)">Rien pour l\'instant. Elle décide à chaque nouvelle minute.</span></div>';
+}
+function saveLive(){ try { localStorage.setItem(LIVE_KEY, JSON.stringify(live)); } catch(e){} }
+function loadLive(){
+  live = {cash: START, h: {}, snaps: [], eq: [], tc: [], log: [], trades: 0};
+  try { const s = JSON.parse(localStorage.getItem(LIVE_KEY)); if (s && typeof s.cash === 'number' && Array.isArray(s.snaps)) Object.assign(live, s); } catch(e){}
+  renderLog(); renderJudge(); renderRows();
+}
+
+/* ============ LE JUGE ============ */
+function judge(){
+  const P = live.snaps, n = P.length; if (n < 2) return null;
+  const base = live.eq[0], ia = liveValue(), last = P[n - 1];
+  let r = 0; for (let i = 0; i < S.length; i++) r += last[i] / P[0][i];
+  const hold = base * (1 - FEE) * r / S.length;
+  const rate = Math.min(0.5, Math.max(0.001, live.tc.reduce((a, b) => a + b, 0) / (n * S.length)));
+  let seed = 12345; const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  let beaten = 0; const q = new Float64Array(S.length);
+  for (let b = 0; b < ROBOTS; b++) {
+    let cash = base, held = 0; q.fill(0);
+    for (let t = 0; t < n; t++) {
+      const p = P[t]; let tot = -1;
+      for (let i = 0; i < S.length; i++) {
+        if (rnd() >= rate) continue;
+        if (q[i]) { cash += q[i] * p[i] * (1 - FEE); q[i] = 0; held--; }
+        else if (held < MAXPOS) {
+          if (tot < 0) { tot = cash; for (let j = 0; j < S.length; j++) tot += q[j] * p[j]; }
+          const amt = Math.min(cash, tot / MAXPOS); if (amt < tot / MAXPOS * 0.5) continue;
+          cash -= amt; q[i] = amt * (1 - FEE) / p[i]; held++;
+        }
+      }
+    }
+    let v = cash; for (let i = 0; i < S.length; i++) v += q[i] * last[i];
+    if (v < ia) beaten++;
+  }
+  return {n, ia, hold, beaten: beaten / ROBOTS * 100};
+}
+function renderJudge(){
+  const j = judge(), v = $('#jVerdict');
+  $('#jN').textContent = live.snaps.length.toLocaleString('fr-FR');
+  if (!j) {
+    $('#jIa').textContent = eur(liveValue()); $('#jHold').textContent = '—'; $('#jRand').textContent = '—';
+    v.className = 'verdict'; v.textContent = 'Le juge attend les premières minutes en direct.'; return;
+  }
+  const c = x => x >= START ? 'up' : 'down';
+  $('#jIa').textContent = eur(j.ia); $('#jIa').className = c(j.ia);
+  $('#jHold').textContent = eur(j.hold); $('#jHold').className = c(j.hold);
+  $('#jRand').textContent = j.beaten.toFixed(0) + ' %';
+  if (j.n < 60) { v.className = 'verdict'; v.textContent = "Trop tôt pour juger : il faut au moins une heure, et en vrai plusieurs jours."; }
+  else if (j.ia > j.hold && j.beaten >= 95) { v.className = 'verdict good'; v.textContent = "Pour l'instant, elle fait mieux que le panier et que 95 % des robots au hasard. Si ça tient plusieurs jours, ce serait vraiment remarquable."; }
+  else if (j.beaten < 50) { v.className = 'verdict bad'; v.textContent = "Pour l'instant, un robot qui joue au hasard ferait au moins aussi bien qu'elle."; }
+  else { v.className = 'verdict'; v.textContent = "Elle fait mieux que la moitié des robots au hasard, mais ça reste dans la zone de la chance."; }
+}
+
+/* ============ AFFICHAGE ============ */
+function livePrices(){ const p = {}; for (const d of S) p[d.s] = d.last || d.c[d.c.length - 1]; return p; }
+function liveValue(){ return value(livePrices()); }
+function renderRows(){
+  const P = livePrices();
+  $('#rows').innerHTML = S.map(d => {
+    const h = live.h[d.s], n = d.c.length, ch = n > 1 ? d.last / d.c[n - 1] - 1 : 0;
+    const pv = Math.round(d.pr[d.act] * 100);
+    let has = '<span style="color:var(--mut)">—</span>';
+    if (h) { const v = h.q * P[d.s], g = v * (1 - FEE) / h.cost - 1; has = `<span class="m">${eur(v)}</span><small class="${g >= 0 ? 'up' : 'down'}">${pct(g)}</small>`; }
+    return `<tr class="${h ? 'held' : ''}"><td><b>${d.s}</b><small>${d.name}</small></td><td class="r m">${eur(P[d.s])}</td>`
+      + `<td class="r m hide ${ch >= 0 ? 'up' : 'down'}">${pct(ch)}</td>`
+      + `<td><span class="tag ${LCOL[d.act]}">${LABEL[d.act]}</span><small>sûre à ${pv} %</small></td><td>${has}</td></tr>`;
+  }).join('');
+}
+function ctx(id){
+  const c = $(id), dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  return [g, w, h];
+}
+function line(g, pts, color, width){ g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.strokeStyle = color; g.lineWidth = width; g.lineJoin = 'round'; g.stroke(); }
+function msg(g, h, t){ g.fillStyle = '#89958c'; g.font = '12px IBM Plex Mono, monospace'; g.fillText(t, 4, h / 2); }
+function drawEq(){
+  const [g, w, h] = ctx('#cEq'), e = live.eq.concat([liveValue()]);
+  if (e.length < 2) return msg(g, h, 'Elle décide à chaque nouvelle minute…');
+  const mn = Math.min(...e, START), mx = Math.max(...e, START), r = (mx - mn) || 1;
+  const X = i => i / (e.length - 1) * w, Y = v => 8 + (1 - (v - mn) / r) * (h - 16);
+  g.strokeStyle = '#26312b'; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(0, Y(START)); g.lineTo(w, Y(START)); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#89958c'; g.font = '10px IBM Plex Mono, monospace'; g.fillText('100 €', 2, Y(START) - 4);
+  const step = Math.max(1, Math.floor(e.length / w)), pts = [];
+  for (let i = 0; i < e.length; i += step) pts.push([X(i), Y(e[i])]);
+  pts.push([X(e.length - 1), Y(e[e.length - 1])]);
+  line(g, pts, e[e.length - 1] >= START ? '#4fd68a' : '#ff6a55', 1.8);
+}
+function drawFit(){
+  const [g, w, h] = ctx('#cFit');
+  if (hist.length < 2) return msg(g, h, 'Les premières générations arrivent…');
+  let hold = 0; for (const d of S) { const sp = splitOf(d.c.length); hold += d.c[d.c.length - 1] / d.c[sp] - 1; } hold /= S.length;
+  const vals = hist.flat().concat([hold, 0]), mn = Math.min(...vals), mx = Math.max(...vals), r = (mx - mn) || 0.01;
+  const X = i => i / (hist.length - 1) * (w - 4), Y = v => 8 + (1 - (v - mn) / r) * (h - 16);
+  g.strokeStyle = '#26312b'; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(0, Y(0)); g.lineTo(w, Y(0)); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#89958c'; g.font = '10px IBM Plex Mono, monospace'; g.fillText('0 %', 2, Y(0) - 3);
+  line(g, [[0, Y(hold)], [w, Y(hold)]], '#89958c', 1);
+  line(g, hist.map((p, i) => [X(i), Y(p[1])]), '#6fb6ff', 1.6);
+  line(g, hist.map((p, i) => [X(i), Y(p[0])]), '#ffd23f', 2);
+}
+function updateStats(){
+  const v = liveValue();
+  $('#val').textContent = eur(v); $('#val').className = v >= START ? 'up' : 'down';
+  $('#valPct').textContent = pct(v / START - 1); $('#valPct').className = 'm ' + (v >= START ? 'up' : 'down');
+  $('#cash').textContent = eur(live.cash);
+  $('#nHeld').textContent = Object.keys(live.h).length + ' / ' + MAXPOS;
+  $('#nOps').textContent = live.trades.toLocaleString('fr-FR');
+  $('#next').textContent = 60 - new Date().getSeconds() + ' s';
+  $('#sGen').textContent = gen.toLocaleString('fr-FR');
+  if (hist.length) { const te = hist[hist.length - 1][1]; $('#sTest').textContent = pct(te); $('#sTest').className = te >= 0 ? 'up' : 'down'; }
+}
+function everySecond(){
+  if (!ready) return;
+  checkStep(); updateStats(); renderRows(); drawEq(); drawFit();
+}
+async function start(){
+  try { await loadHistory(); }
+  catch(e) { $('#status').textContent = 'Impossible de charger les prix. Vérifie Internet et recharge la page.'; return; }
+  let saved = null;
+  try { const s = JSON.parse(localStorage.getItem(BRAIN_KEY)); if (s && s.w && s.w.length === NW) saved = s; } catch(e){}
+  champ = saved ? Float32Array.from(saved.w) : randomBrain();
+  gen = saved ? saved.gen || 0 : 0; hist = saved ? (saved.hist || []).slice(-300) : [];
+  worker.postMessage({type: 'init', series: S.map(d => d.c), saved: saved ? saved.w : null, gen, speed});
+  loadLive(); connectLive();
+  $('#status').textContent = `12 cryptos · ${(S.reduce((a, d) => a + d.c.length, 0)).toLocaleString('fr-FR')} minutes de prix réels · 60 cerveaux en compétition`;
+  ready = true; everySecond();
+}
+$('#speed').addEventListener('click', e => {
+  const b = e.target.closest('[data-s]'); if (!b) return;
+  speed = +b.dataset.s; worker.postMessage({speed});
+  document.querySelectorAll('#speed button').forEach(x => x.classList.toggle('on', x === b));
+});
+let resetArmed = false;
+$('#reset').addEventListener('click', e => {
+  const b = e.currentTarget;
+  if (!resetArmed) { resetArmed = true; b.textContent = 'Sûr ? Touche encore'; setTimeout(() => { resetArmed = false; b.textContent = 'Tout recommencer'; }, 4000); return; }
+  resetArmed = false; b.textContent = 'Tout recommencer';
+  try { localStorage.removeItem(BRAIN_KEY); localStorage.removeItem(LIVE_KEY); } catch(x){}
+  champ = randomBrain(); gen = 0; hist = [];
+  worker.postMessage({type: 'init', saved: null, gen: 0, speed});
+  loadLive();
+});
+window.addEventListener('beforeunload', () => { saveBrain(); saveLive(); });
+setInterval(everySecond, 1000);
+start();
+</script>
+</body>
+</html>
