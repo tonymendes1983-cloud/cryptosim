@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1512">
+<title>Labo IA – CryptoSim</title>
+<meta name="description" content="Regarde un petit réseau de neurones apprendre à trader en direct, avec de l'argent fictif : génération après génération, et l'examen sur des données qu'il n'a jamais vues.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1512;--panel:#151d19;--panel2:#1b2520;--line:#26312b;--ink:#efe9da;--mut:#89958c;--acc:#ffd23f;--up:#4fd68a;--down:#ff6a55;--blue:#6fb6ff;
+  --sans:"Archivo","Segoe UI",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+.wrap{max-width:1280px;margin:0 auto;padding:16px 16px 50px}
+a{color:var(--acc)}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.logo{font-weight:900;font-size:22px;letter-spacing:-.03em;text-transform:uppercase}.logo i{font-style:normal;color:var(--acc)}
+.back{font-size:14px;text-decoration:none;border:1px solid var(--line);padding:7px 11px;border-radius:6px;color:var(--ink)}
+.lab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.m{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.up{color:var(--up)}.down{color:var(--down)}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;margin-bottom:14px}
+h2{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+.grid{display:grid;gap:14px}
+@media(min-width:1000px){.grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+select,button{font-family:inherit}
+select{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:9px 10px;font-size:14px}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:9px 13px;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;cursor:pointer}
+.btn.on,.btn.gold{background:var(--acc);color:#111;border-color:var(--acc)}
+.seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;border-right:1px solid var(--line);background:var(--panel);color:var(--mut);padding:9px 11px;font-size:12px;font-weight:700;cursor:pointer}
+.seg button:last-child{border-right:0}.seg button.on{background:var(--acc);color:#111}
+canvas{width:100%;display:block}
+#cPrice{height:260px}#cNet{height:330px}#cFit{height:170px}#cLive{height:150px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px;margin-top:10px}
+@media(min-width:640px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stats b{display:block;font-family:var(--mono);font-size:17px;font-weight:600;margin-top:2px}
+.verdict{border-left:3px solid var(--acc);padding:4px 0 4px 11px;margin-top:12px;font-size:14.5px;line-height:1.5}
+.verdict.good{border-color:var(--up)}.verdict.bad{border-color:var(--down)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:6px}
+.legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.probs{display:grid;grid-template-columns:70px 1fr 48px;gap:6px 10px;align-items:center;font-size:13px;margin:10px 0}
+.bar{height:10px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%}
+.log{font-family:var(--mono);font-size:12px;max-height:190px;overflow-y:auto;border-top:1px solid var(--line);margin-top:10px}
+.log div{padding:6px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+p.t{font-size:14.5px;line-height:1.55;color:#cfc9bb;margin:0 0 10px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mut);margin-right:6px}.dot.on{background:var(--up);animation:b 1.4s infinite}
+@keyframes b{50%{opacity:.25}}
+</style>
+</head>
+<body><div class="wrap">
+<header>
+  <a class="back" href="./">← CryptoSim</a>
+  <div class="logo">Labo <i>IA</i></div>
+  <span class="lab" id="status">Chargement des prix…</span>
+</header>
+
+<div class="tools">
+  <select id="sym" aria-label="Crypto étudiée">
+    <option value="BTC">Bitcoin</option><option value="ETH">Ethereum</option><option value="SOL">Solana</option><option value="XRP">XRP</option><option value="DOGE">Dogecoin</option>
+  </select>
+  <div class="seg" id="speed"><button data-s="0">Pause</button><button data-s="1">Lent</button><button data-s="2" class="on">Normal</button><button data-s="3">Turbo</button></div>
+  <button class="btn" id="reset">Nouveau cerveau</button>
+</div>
+
+<div class="grid">
+  <div>
+    <div class="box">
+      <h2>Ce qu'elle fait</h2>
+      <canvas id="cPrice"></canvas>
+      <div class="legend"><span style="--c:var(--ink)">Prix (1 point = 1 minute)</span><span style="--c:var(--up)">Achète</span><span style="--c:var(--down)">Vend</span><span style="--c:#2a3a52">Zone d'examen (jamais vue à l'entraînement)</span></div>
+    </div>
+    <div class="box">
+      <h2>Elle apprend</h2>
+      <canvas id="cFit"></canvas>
+      <div class="legend"><span style="--c:var(--acc)">Meilleur cerveau (entraînement)</span><span style="--c:var(--blue)">Même cerveau à l'examen</span><span style="--c:var(--mut)">Garder la crypto sans rien faire (examen)</span></div>
+      <div class="stats">
+        <div><span class="lab">Génération</span><b id="sGen">0</b></div>
+        <div><span class="lab">Entraînement</span><b id="sTrain">—</b></div>
+        <div><span class="lab">Examen</span><b id="sTest">—</b></div>
+        <div><span class="lab">Marché (examen)</span><b id="sHold">—</b></div>
+      </div>
+      <div class="verdict" id="verdict">Elle commence avec un cerveau au hasard.</div>
+    </div>
+  </div>
+  <div>
+    <div class="box">
+      <h2>Son cerveau</h2>
+      <canvas id="cNet"></canvas>
+      <div class="legend"><span style="--c:var(--up)">Lien positif</span><span style="--c:var(--down)">Lien négatif</span><span style="--c:var(--acc)">Neurone allumé</span></div>
+    </div>
+    <div class="box">
+      <h2><span class="dot" id="liveDot"></span>En direct avec 10 000 € fictifs</h2>
+      <canvas id="cLive"></canvas>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+        <div><span class="lab">Son compte</span><b id="lVal">10 000,00 €</b></div>
+        <div><span class="lab">Elle a</span><b id="lPos">Euros</b></div>
+        <div><span class="lab">Décision dans</span><b id="lNext">—</b></div>
+      </div>
+      <div class="probs" id="probs"></div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<div class="box">
+  <h2>Comment elle apprend</h2>
+  <p class="t"><b>Son cerveau</b> est un petit réseau de 14 neurones d'entrée, 12 neurones cachés et 3 de sortie. En entrée, elle voit les 10 dernières variations du prix, l'écart avec la moyenne, l'agitation du marché, la tendance sur 30 minutes, et si elle possède déjà de la crypto. En sortie, elle choisit : vendre, attendre ou acheter.</p>
+  <p class="t"><b>Elle apprend par évolution.</b> On crée 60 cerveaux au hasard. Chacun joue sur les mêmes jours de prix passés, avec 0,2 % de frais par opération. Les meilleurs survivent, se « reproduisent » en mélangeant leurs connexions, et leurs enfants reçoivent de petites mutations au hasard. Puis on recommence. Génération après génération, les cerveaux gagnent de plus en plus… sur ces jours-là.</p>
+  <p class="t"><b>Le vrai test, c'est l'examen.</b> La partie bleue du graphique n'est jamais montrée pendant l'entraînement. Si elle gagne à l'entraînement mais perd à l'examen, elle a seulement appris le passé par cœur : c'est le <b>surapprentissage</b>, le piège n°1 de l'IA en bourse. Les vrais fonds d'investissement, avec des milliers de chercheurs, ont beaucoup de mal à battre le marché de façon durable.</p>
+  <p class="t" style="margin:0">En direct, le meilleur cerveau du moment décide à chaque nouvelle minute, et l'entraînement continue avec les nouveaux prix. Tout est fictif.</p>
+</div>
+</div>
+
+<!-- Le cœur : réseau de neurones + simulation. Utilisé par la page ET par le calcul en arrière-plan. -->
+<script id="core">
+'use strict';
+const NIN = 14, HID = 12, NOUT = 3, NF = NIN - 1;    // 13 informations + « possède ? »
+const FEE = 0.002, WIN = 30, TEST_PART = 0.3;
+const NW = NIN * HID + HID + HID * NOUT + NOUT;     // nombre de poids (connexions)
+let closes = [], F = new Float32Array(0), split = 0;
+const xIn = new Float32Array(NIN), hOut = new Float32Array(HID), oOut = new Float32Array(NOUT);
+function clip(v){ return v > 3 ? 3 : v < -3 ? -3 : v; }
+function tanh(x){ if (x > 4.97) return 1; if (x < -4.97) return -1; const x2 = x * x; return x * (135135 + x2 * (17325 + x2 * (378 + x2))) / (135135 + x2 * (62370 + x2 * (3150 + x2 * 28))); }
+// Ce que l'IA « voit » à chaque minute t
+function buildFeatures(){
+  const c = closes, n = c.length; F = new Float32Array(n * NF);
+  for (let t = WIN + 1; t < n; t++) {
+    const o = t * NF; let s = 0, s2 = 0;
+    for (let k = 0; k < 10; k++) F[o + k] = clip(Math.log(c[t - k] / c[t - k - 1]) * 2000);
+    for (let k = 0; k < WIN; k++) { s += c[t - k]; const r = Math.log(c[t - k] / c[t - k - 1]); s2 += r * r; }
+    F[o + 10] = clip((c[t] / (s / WIN) - 1) * 500);      // écart avec la moyenne
+    F[o + 11] = clip(Math.sqrt(s2 / WIN) * 2000 - 1);     // agitation
+    F[o + 12] = clip((c[t] / c[t - WIN] - 1) * 300);      // tendance 30 min
+  }
+  split = Math.floor(n * (1 - TEST_PART));
+}
+// Le réseau : entrées -> 12 neurones cachés -> 3 sorties. Renvoie 0 vendre, 1 attendre, 2 acheter.
+function forward(w, t, pos){
+  const o = t * NF;
+  for (let i = 0; i < NF; i++) xIn[i] = F[o + i];
+  xIn[NF] = pos ? 1 : -1;
+  let p = 0;
+  for (let h = 0; h < HID; h++) { let s = 0; for (let i = 0; i < NIN; i++) s += xIn[i] * w[p++]; hOut[h] = s; }
+  for (let h = 0; h < HID; h++) hOut[h] = tanh(hOut[h] + w[p++]);
+  for (let k = 0; k < NOUT; k++) { let s = 0; for (let h = 0; h < HID; h++) s += hOut[h] * w[p++]; oOut[k] = s; }
+  for (let k = 0; k < NOUT; k++) oOut[k] += w[p++];
+  return oOut[2] > oOut[1] ? (oOut[2] > oOut[0] ? 2 : 0) : (oOut[1] > oOut[0] ? 1 : 0);
+}
+// Fait jouer un cerveau de la minute a à b (départ = 1). rec reçoit [minute, +1 achat / -1 vente].
+function play(w, a, b, rec){
+  let cash = 1, coins = 0, pos = 0, trades = 0;
+  for (let t = Math.max(a, WIN + 1); t < b; t++) {
+    const act = forward(w, t, pos);
+    if (act === 2 && !pos) { coins = cash * (1 - FEE) / closes[t]; cash = 0; pos = 1; trades++; if (rec) rec.push([t, 1]); }
+    else if (act === 0 && pos) { cash = coins * closes[t] * (1 - FEE); coins = 0; pos = 0; trades++; if (rec) rec.push([t, -1]); }
+  }
+  return cash + coins * closes[b - 1];
+}
+function gauss(){ let u = 0; while (!u) u = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random()); }
+function randomBrain(){ const w = new Float32Array(NW); for (let i = 0; i < NW; i++) w[i] = gauss() * 0.5; return w; }
+function mutate(w, rate, size){ for (let i = 0; i < NW; i++) if (Math.random() < rate) w[i] += gauss() * size; }
+</script>
+
+<!-- L'évolution, qui tourne en arrière-plan (Web Worker) pour ne pas bloquer l'affichage -->
+<script id="evo" type="text/plain">
+const POP = 60, ELITE = 6;
+let pop = [], gen = 0, speed = 2, timer = null;
+function pick(){ let b = pop[(Math.random() * POP) | 0]; for (let k = 0; k < 2; k++) { const c = pop[(Math.random() * POP) | 0]; if (c.fit > b.fit) b = c; } return b; }
+function generation(){
+  for (const p of pop) p.fit = Math.log(play(p.w, WIN + 1, split));   // note = gain sur l'entraînement
+  pop.sort((a, b) => b.fit - a.fit);
+  const best = pop[0], test = play(best.w, split, closes.length) - 1;  // examen : données jamais vues
+  const next = pop.slice(0, ELITE).map(p => ({w: p.w, fit: 0}));       // les meilleurs survivent
+  while (next.length < POP) {                                          // les autres : enfants mutés
+    const a = pick().w, b = pick().w, w = new Float32Array(NW);
+    for (let i = 0; i < NW; i++) w[i] = Math.random() < 0.5 ? a[i] : b[i];
+    mutate(w, 0.1, 0.3);
+    if (Math.random() < 0.1) mutate(w, 0.05, 1.5);
+    next.push({w, fit: 0});
+  }
+  pop = next; gen++;
+  return [Math.exp(best.fit) - 1, test];
+}
+function tick(){
+  let h; const t0 = performance.now();
+  do h = generation(); while (speed === 3 && performance.now() - t0 < 150);
+  postMessage({gen, champ: pop[0].w, h});
+  schedule();
+}
+function schedule(){ clearTimeout(timer); if (speed) timer = setTimeout(tick, speed === 3 ? 0 : speed === 2 ? 100 : 700); }
+onmessage = e => {
+  const m = e.data;
+  if (m.closes) { closes = m.closes; buildFeatures(); }
+  if (m.type === 'init') {
+    gen = m.gen || 0; pop = [];
+    for (let i = 0; i < POP; i++) {
+      if (m.saved && i < POP / 2) { const w = Float32Array.from(m.saved); if (i) mutate(w, 0.15, 0.2); pop.push({w, fit: 0}); }
+      else pop.push({w: randomBrain(), fit: 0});
+    }
+  }
+  if ('speed' in m) speed = m.speed;
+  schedule();
+};
+</script>
+
+<script>
+'use strict';
+const API = 'https://data-api.binance.vision/api/v3', WS = 'wss://data-stream.binance.vision/ws/';
+const PAIRS = {BTC: 'BTCUSDT', ETH: 'ETHUSDT', SOL: 'SOLUSDT', XRP: 'XRPUSDT', DOGE: 'DOGEUSDT'};
+const NCANDLES = 3000;
+const IN_LABELS = ['−1 min', '−2 min', '−3 min', '−4 min', '−5 min', '−6 min', '−7 min', '−8 min', '−9 min', '−10 min', 'Écart moyenne', 'Agitation', 'Tendance 30 min', 'Possède ?'];
+const OUT_LABELS = ['Vendre', 'Attendre', 'Acheter'];
+const $ = s => document.querySelector(s);
+const eur = v => v.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: v < 1 ? 5 : 2}) + ' €';
+const pct = v => (v >= 0 ? '+' : '') + (v * 100).toFixed(2).replace('.', ',') + ' %';
+
+let sym = 'BTC', times = [], eurusd = 1.1, champ = randomBrain(), champTrades = [], hist = [], gen = 0, holdTest = 0, holdTrain = 0;
+let speed = 2, ready = false;
+
+/* ============ CALCUL EN ARRIÈRE-PLAN ============ */
+const worker = new Worker(URL.createObjectURL(new Blob([$('#core').textContent, $('#evo').textContent], {type: 'text/javascript'})));
+worker.onmessage = e => {
+  const m = e.data;
+  gen = m.gen; champ = m.champ; hist.push(m.h); if (hist.length > 300) hist.shift();
+  champTrades = []; play(champ, WIN + 1, closes.length, champTrades);
+  if (gen % 10 === 0) saveBrain();
+};
+
+/* ============ DONNÉES ============ */
+async function getJSON(u){ const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+async function loadHistory(){
+  let all = [], end = '';
+  for (let i = 0; i < NCANDLES / 1000; i++) {
+    const k = await getJSON(`${API}/klines?symbol=${PAIRS[sym]}&interval=1m&limit=1000${end}`);
+    all = k.concat(all); end = '&endTime=' + (k[0][0] - 1);
+  }
+  try { eurusd = +(await getJSON(`${API}/ticker/price?symbol=EURUSDT`)).price || eurusd; } catch(e){}
+  all.pop();                                        // la dernière minute n'est pas finie
+  closes = all.map(k => +k[4] / eurusd); times = all.map(k => k[0]);
+  buildFeatures(); updateHold();
+}
+function updateHold(){ holdTest = closes[closes.length - 1] / closes[split] - 1; holdTrain = closes[split - 1] / closes[WIN + 1] - 1; }
+function storeKey(){ return 'cs_ia_v1_' + sym; }
+function saveBrain(){ try { localStorage.setItem(storeKey(), JSON.stringify({w: Array.from(champ), gen, hist: hist.slice(-300)})); } catch(e){} }
+
+/* ============ EN DIRECT ============ */
+let live, ws = null, lastPrice = 0, candleEnd = 0;
+function connectLive(){
+  if (ws) { ws.onclose = null; ws.close(); }
+  const mySym = sym;
+  ws = new WebSocket(WS + PAIRS[sym].toLowerCase() + '@kline_1m');
+  ws.onmessage = ev => {
+    const k = JSON.parse(ev.data).k; if (!k || mySym !== sym) return;
+    lastPrice = +k.c / eurusd; candleEnd = k.T;
+    $('#liveDot').classList.add('on');
+    if (k.x && k.t > times[times.length - 1]) newCandle(k.t, lastPrice);
+  };
+  ws.onclose = () => { $('#liveDot').classList.remove('on'); setTimeout(connectLive, 3000); };
+}
+function newCandle(t, price){
+  closes.push(price); times.push(t);
+  if (closes.length > NCANDLES + 600) { closes.shift(); times.shift(); }
+  buildFeatures(); updateHold();
+  worker.postMessage({closes});                     // l'entraînement continue avec ce nouveau prix
+  const act = forward(champ, closes.length - 1, live.pos);
+  showProbs(softmax());
+  if (act === 2 && !live.pos) { live.coins = live.cash * (1 - FEE) / price; live.cash = 0; live.pos = 1; addLog('Achète', price, 'up'); }
+  else if (act === 0 && live.pos) { live.cash = live.coins * price * (1 - FEE); live.coins = 0; live.pos = 0; addLog('Vend', price, 'down'); }
+  else addLog(live.pos ? 'Garde' : 'Attend', price, '');
+  live.equity.push(liveValue()); if (live.equity.length > 300) live.equity.shift();
+  champTrades = []; play(champ, WIN + 1, closes.length, champTrades);
+  try { localStorage.setItem('cs_ia_live_' + sym, JSON.stringify(live)); } catch(e){}
+}
+function liveValue(){ return live.cash + live.coins * (lastPrice || closes[closes.length - 1]); }
+function softmax(){ const m = Math.max(...oOut), e = Array.from(oOut, v => Math.exp(v - m)), s = e.reduce((a, b) => a + b); return e.map(v => v / s); }
+function addLog(what, price, c){
+  live.log.unshift([new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'}), what, price, c]);
+  if (live.log.length > 60) live.log.pop();
+  renderLog();
+}
+function renderLog(){ $('#log').innerHTML = live.log.map(([h, w, p, c]) => `<div><span>${h} · <b class="${c}">${w}</b></span><span>${eur(p)}</span></div>`).join(''); }
+function showProbs(pr){
+  const col = ['var(--down)', 'var(--mut)', 'var(--up)'];
+  $('#probs').innerHTML = OUT_LABELS.map((l, i) => `<span>${l}</span><div class="bar"><i style="width:${(pr[i] * 100).toFixed(0)}%;background:${col[i]}"></i></div><span class="m">${(pr[i] * 100).toFixed(0)} %</span>`).join('');
+}
+function loadLive(){
+  live = {cash: 10000, coins: 0, pos: 0, equity: [], log: []};
+  try { const s = JSON.parse(localStorage.getItem('cs_ia_live_' + sym)); if (s && typeof s.cash === 'number') Object.assign(live, s); } catch(e){}
+  renderLog();
+}
+
+/* ============ DESSINS ============ */
+function ctx(id){
+  const c = $(id), dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  return [g, w, h];
+}
+function line(g, pts, color, width){ g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.strokeStyle = color; g.lineWidth = width; g.lineJoin = 'round'; g.stroke(); }
+let cursor = WIN + 1;
+function drawPrice(){
+  const [g, w, h] = ctx('#cPrice'); const n = closes.length; if (n < 2) return;
+  let mn = Infinity, mx = -Infinity; for (const v of closes) { if (v < mn) mn = v; if (v > mx) mx = v; }
+  const r = (mx - mn) || 1, X = i => i / (n - 1) * w, Y = v => 18 + (1 - (v - mn) / r) * (h - 30);
+  g.fillStyle = 'rgba(111,182,255,.10)'; g.fillRect(X(split), 0, w - X(split), h);
+  g.fillStyle = '#89958c'; g.font = '11px IBM Plex Mono, monospace';
+  g.fillText('ENTRAÎNEMENT', 6, 12); g.fillText('EXAMEN', X(split) + 6, 12);
+  const step = Math.max(1, Math.floor(n / w)), pts = [];
+  for (let i = 0; i < n; i += step) pts.push([X(i), Y(closes[i])]);
+  line(g, pts, '#efe9da', 1.2);
+  for (const [t, d] of champTrades) {
+    if (t > cursor) break;
+    const x = X(t), y = Y(closes[t]);
+    g.fillStyle = d > 0 ? '#4fd68a' : '#ff6a55'; g.beginPath();
+    if (d > 0) { g.moveTo(x, y + 4); g.lineTo(x - 4, y + 11); g.lineTo(x + 4, y + 11); } else { g.moveTo(x, y - 4); g.lineTo(x - 4, y - 11); g.lineTo(x + 4, y - 11); }
+    g.fill();
+  }
+  g.strokeStyle = '#ffd23f'; g.lineWidth = 1; g.beginPath(); g.moveTo(X(cursor), 0); g.lineTo(X(cursor), h); g.stroke();
+}
+function drawFit(){
+  const [g, w, h] = ctx('#cFit');
+  if (hist.length < 2) { g.fillStyle = '#89958c'; g.font = '12px IBM Plex Mono, monospace'; g.fillText('Les premières générations arrivent…', 4, h / 2); return; }
+  const vals = hist.flat().concat([holdTest, 0]), mn = Math.min(...vals), mx = Math.max(...vals), r = (mx - mn) || 0.01;
+  const X = i => i / (hist.length - 1) * (w - 4), Y = v => 8 + (1 - (v - mn) / r) * (h - 16);
+  g.strokeStyle = '#26312b'; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(0, Y(0)); g.lineTo(w, Y(0)); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#89958c'; g.font = '10px IBM Plex Mono, monospace'; g.fillText('0 %', 2, Y(0) - 3);
+  line(g, [[0, Y(holdTest)], [w, Y(holdTest)]], '#89958c', 1);
+  line(g, hist.map((p, i) => [X(i), Y(p[1])]), '#6fb6ff', 1.6);
+  line(g, hist.map((p, i) => [X(i), Y(p[0])]), '#ffd23f', 2);
+}
+function drawNet(){
+  const [g, w, h] = ctx('#cNet');
+  const t = Math.min(Math.max(cursor, WIN + 1), closes.length - 1);
+  let pos = 0; for (const [tt, d] of champTrades) { if (tt > t) break; pos = d > 0 ? 1 : 0; }
+  forward(champ, t, pos);
+  const pr = softmax(), best = pr.indexOf(Math.max(...pr));
+  const lx = 108, hx = w * 0.57, ox = w - 72;
+  const yIn = i => 12 + i * (h - 24) / (NIN - 1), yH = i => 28 + i * (h - 56) / (HID - 1), yO = i => h / 2 + (i - 1) * Math.min(80, h / 4);
+  const edge = (x1, y1, x2, y2, v, k) => { const a = Math.min(1, Math.abs(v) / 2) * k; g.strokeStyle = v > 0 ? `rgba(79,214,138,${a})` : `rgba(255,106,85,${a})`; g.lineWidth = 0.4 + Math.min(2.2, Math.abs(v)); g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); };
+  let p = 0;
+  for (let hh = 0; hh < HID; hh++) for (let i = 0; i < NIN; i++) edge(lx, yIn(i), hx, yH(hh), champ[p++], 0.5);
+  p += HID;
+  for (let k = 0; k < NOUT; k++) for (let hh = 0; hh < HID; hh++) edge(hx, yH(hh), ox, yO(k), champ[p++], 0.75);
+  const node = (x, y, v, r) => { g.beginPath(); g.arc(x, y, r, 0, 7); g.fillStyle = `rgba(255,210,63,${0.12 + 0.88 * Math.min(1, Math.abs(v))})`; g.fill(); g.strokeStyle = '#26312b'; g.lineWidth = 1; g.stroke(); };
+  g.font = '10px IBM Plex Mono, monospace'; g.textAlign = 'right';
+  for (let i = 0; i < NIN; i++) { node(lx, yIn(i), xIn[i] / 3, 5); g.fillStyle = '#89958c'; g.fillText(IN_LABELS[i], lx - 9, yIn(i) + 3); }
+  for (let hh = 0; hh < HID; hh++) node(hx, yH(hh), hOut[hh], 7);
+  g.textAlign = 'left';
+  for (let k = 0; k < NOUT; k++) {
+    node(ox, yO(k), pr[k] * 1.4, 11);
+    g.fillStyle = k === best ? '#efe9da' : '#89958c'; g.font = '12px Archivo, sans-serif'; g.fillText(OUT_LABELS[k], ox + 16, yO(k) + 4);
+    g.font = '10px IBM Plex Mono, monospace'; g.fillText((pr[k] * 100).toFixed(0) + ' %', ox + 16, yO(k) + 17);
+  }
+}
+function drawLive(){
+  const [g, w, h] = ctx('#cLive'); const e = live.equity.concat([liveValue()]);
+  if (e.length < 2) { g.fillStyle = '#89958c'; g.font = '12px IBM Plex Mono, monospace'; g.fillText('Elle décide à chaque nouvelle minute…', 4, h / 2); return; }
+  const mn = Math.min(...e, 10000), mx = Math.max(...e, 10000), r = (mx - mn) || 1;
+  const X = i => i / (e.length - 1) * w, Y = v => 8 + (1 - (v - mn) / r) * (h - 16);
+  g.strokeStyle = '#26312b'; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(0, Y(10000)); g.lineTo(w, Y(10000)); g.stroke(); g.setLineDash([]);
+  line(g, e.map((v, i) => [X(i), Y(v)]), e[e.length - 1] >= 10000 ? '#4fd68a' : '#ff6a55', 1.8);
+}
+function updateStats(){
+  const lv = liveValue();
+  $('#lVal').textContent = eur(lv); $('#lVal').className = lv >= 10000 ? 'up' : 'down';
+  $('#lPos').textContent = live.pos ? sym : 'Euros';
+  $('#lNext').textContent = candleEnd ? Math.max(0, Math.round((candleEnd - Date.now()) / 1000)) + ' s' : '—';
+  $('#sGen').textContent = gen.toLocaleString('fr-FR');
+  if (!hist.length) return;
+  const [tr, te] = hist[hist.length - 1];
+  $('#sTrain').textContent = pct(tr); $('#sTrain').className = tr >= 0 ? 'up' : 'down';
+  $('#sTest').textContent = pct(te); $('#sTest').className = te >= 0 ? 'up' : 'down';
+  $('#sHold').textContent = pct(holdTest); $('#sHold').className = holdTest >= 0 ? 'up' : 'down';
+  const v = $('#verdict');
+  if (gen < 15) { v.className = 'verdict'; v.textContent = 'Elle débute : ses décisions sont encore presque au hasard.'; }
+  else if (te > holdTest && te > 0) { v.className = 'verdict good'; v.textContent = "À l'examen, elle fait mieux que garder la crypto sans rien faire. Bien, mais à confirmer : sur quelques heures, ça peut être de la chance."; }
+  else if (tr > holdTrain + 0.002) { v.className = 'verdict bad'; v.textContent = "Elle gagne sur l'entraînement mais pas à l'examen : elle a appris le passé par cœur. C'est le surapprentissage, le piège n°1."; }
+  else { v.className = 'verdict'; v.textContent = 'Elle cherche encore. Avec les frais, trouver une règle qui marche vraiment est très difficile.'; }
+}
+
+/* ============ BOUCLE D'AFFICHAGE ============ */
+let frame = 0;
+function loop(){
+  if (ready) {
+    if (speed) { cursor += 6; if (cursor >= closes.length) cursor = WIN + 1; }
+    drawPrice(); drawNet();
+    if (frame % 10 === 0) { drawFit(); drawLive(); updateStats(); }
+    frame++;
+  }
+  requestAnimationFrame(loop);
+}
+async function start(){
+  ready = false; $('#status').textContent = 'Chargement des prix…';
+  try { await loadHistory(); }
+  catch(e) { $('#status').textContent = 'Impossible de charger les prix. Vérifie Internet et recharge la page.'; return; }
+  let saved = null;
+  try { const s = JSON.parse(localStorage.getItem(storeKey())); if (s && s.w && s.w.length === NW) saved = s; } catch(e){}
+  champ = saved ? Float32Array.from(saved.w) : randomBrain();
+  gen = saved ? saved.gen || 0 : 0; hist = saved ? (saved.hist || []).slice(-300) : [];
+  worker.postMessage({type: 'init', closes, saved: saved ? saved.w : null, gen, speed});
+  champTrades = []; play(champ, WIN + 1, closes.length, champTrades);
+  loadLive(); connectLive(); showProbs([1 / 3, 1 / 3, 1 / 3]);
+  $('#status').textContent = `${closes.length.toLocaleString('fr-FR')} minutes de prix réels · 60 cerveaux en compétition`;
+  ready = true;
+}
+$('#speed').addEventListener('click', e => {
+  const b = e.target.closest('[data-s]'); if (!b) return;
+  speed = +b.dataset.s; worker.postMessage({speed});
+  document.querySelectorAll('#speed button').forEach(x => x.classList.toggle('on', x === b));
+});
+let resetArmed = false;
+$('#reset').addEventListener('click', e => {
+  const b = e.currentTarget;
+  if (!resetArmed) { resetArmed = true; b.textContent = 'Sûr ? Touche encore'; setTimeout(() => { resetArmed = false; b.textContent = 'Nouveau cerveau'; }, 4000); return; }
+  resetArmed = false; b.textContent = 'Nouveau cerveau';
+  try { localStorage.removeItem(storeKey()); localStorage.removeItem('cs_ia_live_' + sym); } catch(x){}
+  champ = randomBrain(); gen = 0; hist = [];
+  worker.postMessage({type: 'init', saved: null, gen: 0, speed});
+  loadLive();
+});
+$('#sym').addEventListener('change', e => { saveBrain(); sym = e.target.value; start(); });
+window.addEventListener('beforeunload', saveBrain);
+start();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
