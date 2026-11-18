@@ -95,15 +95,26 @@ p.t{font-size:14.5px;line-height:1.55;color:#cfc9bb;margin:0 0 10px}
       <div class="legend"><span style="--c:var(--up)">Lien positif</span><span style="--c:var(--down)">Lien négatif</span><span style="--c:var(--acc)">Neurone allumé</span></div>
     </div>
     <div class="box">
-      <h2><span class="dot" id="liveDot"></span>En direct avec 10 000 € fictifs</h2>
+      <h2><span class="dot" id="liveDot"></span>En direct avec 100 € fictifs</h2>
       <canvas id="cLive"></canvas>
       <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-        <div><span class="lab">Son compte</span><b id="lVal">10 000,00 €</b></div>
+        <div><span class="lab">Son compte</span><b id="lVal">100,00 €</b></div>
         <div><span class="lab">Elle a</span><b id="lPos">Euros</b></div>
         <div><span class="lab">Décision dans</span><b id="lNext">—</b></div>
       </div>
       <div class="probs" id="probs"></div>
       <div class="log" id="log"></div>
+    </div>
+    <div class="box">
+      <h2>Le vrai juge</h2>
+      <p class="t" style="font-size:13.5px">Seules comptent ses décisions en direct, sur des minutes qu'elle ne pouvait pas connaître. On compare tes 100 € avec elle, sans rien faire, et avec 1 000 robots qui achètent et vendent au hasard.</p>
+      <div class="stats" style="grid-template-columns:repeat(2,1fr)">
+        <div><span class="lab">Minutes en direct</span><b id="jN">0</b></div>
+        <div><span class="lab">Avec l'IA</span><b id="jIa">100,00 €</b></div>
+        <div><span class="lab">Sans rien faire</span><b id="jHold">—</b></div>
+        <div><span class="lab">Robots au hasard battus</span><b id="jRand">—</b></div>
+      </div>
+      <div class="verdict" id="jVerdict">Le juge attend les premières minutes en direct.</div>
     </div>
   </div>
 </div>
@@ -213,7 +224,7 @@ onmessage = e => {
 'use strict';
 const API = 'https://data-api.binance.vision/api/v3', WS = 'wss://data-stream.binance.vision/ws/';
 const PAIRS = {BTC: 'BTCUSDT', ETH: 'ETHUSDT', SOL: 'SOLUSDT', XRP: 'XRPUSDT', DOGE: 'DOGEUSDT'};
-const NCANDLES = 3000;
+const NCANDLES = 3000, START = 100;            // son compte en direct : 100 € fictifs
 const IN_LABELS = ['−1 min', '−2 min', '−3 min', '−4 min', '−5 min', '−6 min', '−7 min', '−8 min', '−9 min', '−10 min', 'Écart moyenne', 'Agitation', 'Tendance 30 min', 'Possède ?'];
 const OUT_LABELS = ['Vendre', 'Attendre', 'Acheter'];
 const $ = s => document.querySelector(s);
@@ -270,12 +281,48 @@ function newCandle(t, price){
   worker.postMessage({closes});                     // l'entraînement continue avec ce nouveau prix
   const act = forward(champ, closes.length - 1, live.pos);
   showProbs(softmax());
-  if (act === 2 && !live.pos) { live.coins = live.cash * (1 - FEE) / price; live.cash = 0; live.pos = 1; addLog('Achète', price, 'up'); }
-  else if (act === 0 && live.pos) { live.cash = live.coins * price * (1 - FEE); live.coins = 0; live.pos = 0; addLog('Vend', price, 'down'); }
+  if (act === 2 && !live.pos) { live.coins = live.cash * (1 - FEE) / price; live.cash = 0; live.pos = 1; live.trades++; addLog('Achète', price, 'up'); }
+  else if (act === 0 && live.pos) { live.cash = live.coins * price * (1 - FEE); live.coins = 0; live.pos = 0; live.trades++; addLog('Vend', price, 'down'); }
   else addLog(live.pos ? 'Garde' : 'Attend', price, '');
+  live.prices.push(price); if (live.prices.length > 50000) live.prices.shift();
   live.equity.push(liveValue()); if (live.equity.length > 300) live.equity.shift();
   champTrades = []; play(champ, WIN + 1, closes.length, champTrades);
-  try { localStorage.setItem('cs_ia_live_' + sym, JSON.stringify(live)); } catch(e){}
+  try { localStorage.setItem('cs_ia_live2_' + sym, JSON.stringify(live)); } catch(e){}
+  renderJudge();
+}
+// Le juge : l'IA contre « garder sans rien faire » et contre 1 000 robots au hasard, sur les mêmes minutes en direct
+function judge(){
+  const P = live.prices, n = P.length; if (n < 2) return null;
+  const last = P[n - 1], ia = live.cash + live.coins * last;
+  const hold = START * (1 - FEE) * last / P[0];
+  const rate = Math.min(0.5, Math.max(0.01, live.trades / n));   // les robots font autant d'opérations qu'elle
+  let seed = 12345; const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  let beaten = 0;
+  for (let b = 0; b < 1000; b++) {
+    let cash = START, coins = 0;
+    for (let t = 0; t < n; t++) {
+      if (rnd() >= rate) continue;
+      if (!coins) { coins = cash * (1 - FEE) / P[t]; cash = 0; } else { cash = coins * P[t] * (1 - FEE); coins = 0; }
+    }
+    if (cash + coins * last < ia) beaten++;
+  }
+  return {n, ia, hold, beaten: beaten / 10};
+}
+function renderJudge(){
+  const j = judge(), v = $('#jVerdict');
+  $('#jN').textContent = (live.prices.length).toLocaleString('fr-FR');
+  if (!j) {
+    $('#jIa').textContent = eur(START); $('#jIa').className = ''; $('#jHold').textContent = '—'; $('#jRand').textContent = '—';
+    v.className = 'verdict'; v.textContent = 'Le juge attend les premières minutes en direct.'; return;
+  }
+  const c = x => x >= START ? 'up' : 'down';
+  $('#jIa').textContent = eur(j.ia); $('#jIa').className = c(j.ia);
+  $('#jHold').textContent = eur(j.hold); $('#jHold').className = c(j.hold);
+  $('#jRand').textContent = j.beaten.toFixed(0) + ' %';
+  if (j.n < 60) { v.className = 'verdict'; v.textContent = "Trop tôt pour juger : il faut au moins une heure, et en vrai plusieurs jours."; }
+  else if (j.ia > j.hold && j.beaten >= 95) { v.className = 'verdict good'; v.textContent = "Pour l'instant, elle fait mieux que garder et que 95 % des robots au hasard. Si ça tient plusieurs jours, ce serait vraiment remarquable."; }
+  else if (j.beaten < 50) { v.className = 'verdict bad'; v.textContent = "Pour l'instant, un robot qui joue au hasard ferait au moins aussi bien qu'elle."; }
+  else { v.className = 'verdict'; v.textContent = "Elle fait mieux que la moitié des robots au hasard, mais ça reste dans la zone de la chance."; }
 }
 function liveValue(){ return live.cash + live.coins * (lastPrice || closes[closes.length - 1]); }
 function softmax(){ const m = Math.max(...oOut), e = Array.from(oOut, v => Math.exp(v - m)), s = e.reduce((a, b) => a + b); return e.map(v => v / s); }
@@ -290,9 +337,9 @@ function showProbs(pr){
   $('#probs').innerHTML = OUT_LABELS.map((l, i) => `<span>${l}</span><div class="bar"><i style="width:${(pr[i] * 100).toFixed(0)}%;background:${col[i]}"></i></div><span class="m">${(pr[i] * 100).toFixed(0)} %</span>`).join('');
 }
 function loadLive(){
-  live = {cash: 10000, coins: 0, pos: 0, equity: [], log: []};
-  try { const s = JSON.parse(localStorage.getItem('cs_ia_live_' + sym)); if (s && typeof s.cash === 'number') Object.assign(live, s); } catch(e){}
-  renderLog();
+  live = {cash: START, coins: 0, pos: 0, equity: [], log: [], prices: [], trades: 0};
+  try { const s = JSON.parse(localStorage.getItem('cs_ia_live2_' + sym)); if (s && typeof s.cash === 'number') Object.assign(live, s); } catch(e){}
+  renderLog(); renderJudge();
 }
 
 /* ============ DESSINS ============ */
@@ -361,14 +408,14 @@ function drawNet(){
 function drawLive(){
   const [g, w, h] = ctx('#cLive'); const e = live.equity.concat([liveValue()]);
   if (e.length < 2) { g.fillStyle = '#89958c'; g.font = '12px IBM Plex Mono, monospace'; g.fillText('Elle décide à chaque nouvelle minute…', 4, h / 2); return; }
-  const mn = Math.min(...e, 10000), mx = Math.max(...e, 10000), r = (mx - mn) || 1;
+  const mn = Math.min(...e, START), mx = Math.max(...e, START), r = (mx - mn) || 1;
   const X = i => i / (e.length - 1) * w, Y = v => 8 + (1 - (v - mn) / r) * (h - 16);
-  g.strokeStyle = '#26312b'; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(0, Y(10000)); g.lineTo(w, Y(10000)); g.stroke(); g.setLineDash([]);
-  line(g, e.map((v, i) => [X(i), Y(v)]), e[e.length - 1] >= 10000 ? '#4fd68a' : '#ff6a55', 1.8);
+  g.strokeStyle = '#26312b'; g.setLineDash([3, 4]); g.beginPath(); g.moveTo(0, Y(START)); g.lineTo(w, Y(START)); g.stroke(); g.setLineDash([]);
+  line(g, e.map((v, i) => [X(i), Y(v)]), e[e.length - 1] >= START ? '#4fd68a' : '#ff6a55', 1.8);
 }
 function updateStats(){
   const lv = liveValue();
-  $('#lVal').textContent = eur(lv); $('#lVal').className = lv >= 10000 ? 'up' : 'down';
+  $('#lVal').textContent = eur(lv); $('#lVal').className = lv >= START ? 'up' : 'down';
   $('#lPos').textContent = live.pos ? sym : 'Euros';
   $('#lNext').textContent = candleEnd ? Math.max(0, Math.round((candleEnd - Date.now()) / 1000)) + ' s' : '—';
   $('#sGen').textContent = gen.toLocaleString('fr-FR');
@@ -419,7 +466,7 @@ $('#reset').addEventListener('click', e => {
   const b = e.currentTarget;
   if (!resetArmed) { resetArmed = true; b.textContent = 'Sûr ? Touche encore'; setTimeout(() => { resetArmed = false; b.textContent = 'Nouveau cerveau'; }, 4000); return; }
   resetArmed = false; b.textContent = 'Nouveau cerveau';
-  try { localStorage.removeItem(storeKey()); localStorage.removeItem('cs_ia_live_' + sym); } catch(x){}
+  try { localStorage.removeItem(storeKey()); localStorage.removeItem('cs_ia_live2_' + sym); } catch(x){}
   champ = randomBrain(); gen = 0; hist = [];
   worker.postMessage({type: 'init', saved: null, gen: 0, speed});
   loadLive();
